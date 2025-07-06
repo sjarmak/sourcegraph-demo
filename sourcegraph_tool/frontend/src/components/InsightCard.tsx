@@ -1,5 +1,5 @@
 import type { Insight } from '../types';
-import { formatDistanceToNow } from 'date-fns';
+import { format } from 'date-fns';
 
 interface InsightCardProps {
   insight: Insight;
@@ -15,7 +15,7 @@ export const InsightCard = ({ insight }: InsightCardProps) => {
               {insight.tool}
             </span>
             <span className="text-sm text-gray-500">
-              {formatDistanceToNow(new Date(insight.date), { addSuffix: true })}
+              {format(new Date(insight.date), 'MMM d, yyyy')}
             </span>
           </div>
           

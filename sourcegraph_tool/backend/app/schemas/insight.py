@@ -14,6 +14,9 @@ class InsightCreate(BaseModel):
     summary: str = Field(..., description="Summary of the insight")
     topics: List[str] = Field(..., description="List of topic keywords")
     link: Optional[str] = Field(None, description="Optional link to source")
+    snippet: Optional[str] = Field(None, description="Relevant content snippet for highlighting")
+    matched_keywords: Optional[List[str]] = Field(None, description="Keywords that matched and caused this insight to be kept")
+    source_type: Optional[str] = Field(None, description="Type of source: rss, arxiv, reddit_api, etc.")
 
 
 class InsightResponse(BaseModel):
@@ -24,6 +27,9 @@ class InsightResponse(BaseModel):
     summary: str
     topics: List[str]
     link: Optional[str]
+    snippet: Optional[str]
+    matched_keywords: Optional[List[str]]
+    source_type: Optional[str]
     created_at: datetime
     updated_at: datetime
     

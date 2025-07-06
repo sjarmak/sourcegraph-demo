@@ -29,6 +29,11 @@ export const InsightFilters = ({ insights, onFilterChange }: InsightFiltersProps
     onFilterChange(filtered);
   };
 
+  const selectAllSources = () => {
+    setSelectedSources([...sources]);
+    onFilterChange(insights.filter(insight => sources.includes(insight.tool)));
+  };
+
   const clearFilters = () => {
     setSelectedSources([]);
     onFilterChange(insights);
@@ -56,20 +61,35 @@ export const InsightFilters = ({ insights, onFilterChange }: InsightFiltersProps
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-neutral-200 rounded-lg shadow-lg z-10">
+        <div className="absolute top-full left-0 mt-2 w-72 bg-white border border-neutral-200 rounded-lg shadow-lg z-10">
           <div className="p-3 border-b border-neutral-100">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-neutral-800">Filter by Source</h3>
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="text-xs text-neutral-500 hover:text-neutral-700 flex items-center gap-1"
-                >
-                  <X className="w-3 h-3" />
-                  Clear
-                </button>
-              )}
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-neutral-800">
+                {hasActiveFilters ? `Limited to ${selectedSources.length} source${selectedSources.length === 1 ? '' : 's'}` : 'Search all sources'}
+              </h3>
+              <div className="flex gap-2">
+                {!hasActiveFilters && (
+                  <button
+                    onClick={selectAllSources}
+                    className="text-xs text-sourcegraph-600 hover:text-sourcegraph-700"
+                  >
+                    Select All
+                  </button>
+                )}
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className="text-xs text-neutral-500 hover:text-neutral-700 flex items-center gap-1"
+                  >
+                    <X className="w-3 h-3" />
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
+            <p className="text-xs text-neutral-500">
+              {hasActiveFilters ? 'Results limited to selected sources' : 'Default: searches across all available sources'}
+            </p>
           </div>
           
           <div className="p-3 max-h-64 overflow-y-auto">

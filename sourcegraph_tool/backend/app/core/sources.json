@@ -1,4 +1,10 @@
 {
+  "global_keywords": [
+    "sourcegraph", "cody", "amp", "code graph", "cursor", "claude", "anthropic", 
+    "windsurf", "codeium", "copilot", "codex", "grok", "amazon q", "continue.dev",
+    "agentic coding agent", "ai code assistant", "autonomous code agent",
+    "mcp", "model context protocol", "agentic developer tools"
+  ],
   "sources": [
     {
       "name": "hackernews",
@@ -35,7 +41,7 @@
         "coding", "development", "tool", "agent", "assistant", "programming",
         "code", "developer", "productivity", "automation", "llm", "gpt"
       ],
-      "enabled": true
+      "enabled": false
     },
     {
       "name": "dev_to",
@@ -71,12 +77,12 @@
         "developer", "coding", "programming", "tool", "productivity", "ai",
         "assistant", "automation", "development", "code", "agent"
       ],
-      "enabled": true
+      "enabled": false
     },
     {
       "name": "anthropic",
       "type": "rss",
-      "endpoint": "https://www.anthropic.com/news/rss.xml",
+      "endpoint": "https://www.anthropic.com/news",
       "parser_config": {
         "title_field": "title",
         "content_fields": ["summary", "content"],
@@ -88,7 +94,7 @@
       "relevance_keywords": [
         "claude", "ai", "assistant", "coding", "development", "tool", "agent"
       ],
-      "enabled": true
+      "enabled": false
     },
     {
       "name": "openai",
@@ -144,7 +150,7 @@
     {
       "name": "github_blog",
       "type": "rss", 
-      "endpoint": "https://github.blog/changelog/feed/",
+      "endpoint": "https://github.blog/feed/",
       "parser_config": {
         "title_field": "title",
         "content_fields": ["summary", "content"],
@@ -178,7 +184,7 @@
     {
       "name": "google_ai",
       "type": "rss",
-      "endpoint": "https://ai.googleblog.com/feeds/posts/default",
+      "endpoint": "https://blog.research.google/feeds/posts/default",
       "parser_config": {
         "title_field": "title",
         "content_fields": ["summary", "content"],
@@ -190,12 +196,12 @@
       "relevance_keywords": [
         "ai", "artificial intelligence", "coding", "programming", "developer", "tool", "assistant", "automation"
       ],
-      "enabled": true
+      "enabled": false
     },
     {
       "name": "vercel_blog",
       "type": "rss",
-      "endpoint": "https://vercel.com/blog/rss.xml",
+      "endpoint": "https://vercel.com/blog/feed.xml",
       "parser_config": {
         "title_field": "title", 
         "content_fields": ["summary", "content"],
@@ -207,7 +213,7 @@
       "relevance_keywords": [
         "ai", "developer", "coding", "programming", "tool", "productivity", "development", "v0", "assistant"
       ],
-      "enabled": true
+      "enabled": false
     },
     {
       "name": "stack_overflow",
@@ -246,7 +252,7 @@
     {
       "name": "the_verge_ai",
       "type": "rss",
-      "endpoint": "https://www.theverge.com/ai/rss/index.xml",
+      "endpoint": "https://www.theverge.com/ai/rss",
       "parser_config": {
         "title_field": "title",
         "content_fields": ["summary", "content"], 
@@ -258,12 +264,12 @@
       "relevance_keywords": [
         "ai", "artificial intelligence", "coding", "programming", "developer", "tool", "assistant", "copilot"
       ],
-      "enabled": true
+      "enabled": false
     },
     {
       "name": "ycombinator",
       "type": "rss",
-      "endpoint": "https://news.ycombinator.com/rss",
+      "endpoint": "https://feeds.feedburner.com/ycombinator",
       "parser_config": {
         "title_field": "title",
         "content_fields": ["summary", "content"],
@@ -274,6 +280,270 @@
       },
       "relevance_keywords": [
         "ai", "coding", "programming", "developer", "tool", "productivity", "assistant", "agent", "automation"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "venturebeat_ai",
+      "type": "rss",
+      "endpoint": "https://feeds.feedburner.com/venturebeat/SZYF",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "artificial intelligence", "coding", "programming", "developer", "tool", "assistant", "automation"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "wired_tech",
+      "type": "rss",
+      "endpoint": "https://www.wired.com/feed/rss",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "artificial intelligence", "coding", "programming", "developer", "tool", "assistant", "automation", "technology"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "the_register",
+      "type": "rss",
+      "endpoint": "https://www.theregister.com/headlines.rss",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "artificial intelligence", "coding", "programming", "developer", "tool", "assistant", "automation", "technology"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "reddit_machinelearning",
+      "type": "rss",
+      "endpoint": "https://www.reddit.com/r/MachineLearning/.rss",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "coding", "development", "tool", "agent", "assistant", "programming",
+        "code", "developer", "productivity", "automation", "llm", "gpt"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "reddit_programming",
+      "type": "rss",
+      "endpoint": "https://www.reddit.com/r/programming/.rss",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "assistant", "tool", "productivity", "automation", "coding", "development"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "reddit_localllama",
+      "type": "rss",
+      "endpoint": "https://www.reddit.com/r/LocalLLaMA/.rss",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "coding", "development", "assistant", "agent", "tool", "programming"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "dev_to_ai",
+      "type": "rss",
+      "endpoint": "https://dev.to/feed/tag/ai",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "assistant", "agent", "coding", "development", "tool", "programming"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "dev_to_agents",
+      "type": "rss",
+      "endpoint": "https://dev.to/feed/tag/agents",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "agent", "assistant", "ai", "coding", "development", "tool", "programming"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "dev_to_developers",
+      "type": "rss",
+      "endpoint": "https://dev.to/feed/tag/developers",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "assistant", "tool", "productivity", "automation", "development"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "medium_ai_agents",
+      "type": "rss",
+      "endpoint": "https://medium.com/feed/tag/ai-agents",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "agent", "assistant", "coding", "development", "tool", "programming"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "medium_code_search",
+      "type": "rss",
+      "endpoint": "https://medium.com/feed/tag/code-search",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "code search", "developer tools", "ai", "assistant", "development"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "medium_developer_tools",
+      "type": "rss",
+      "endpoint": "https://medium.com/feed/tag/developer-tools",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "developer tools", "ai", "assistant", "productivity", "coding", "development"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "product_hunt_ai_tools",
+      "type": "rss",
+      "endpoint": "https://www.producthunt.com/feed/tagged/ai-tools",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "tool", "developer", "coding", "programming", "assistant", "agent"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "nitter_ai_coding",
+      "type": "rss",
+      "endpoint": "https://nitter.net/search/rss?q=AI+coding+assistant+OR+autonomous+agent+OR+code+generation",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "coding", "assistant", "agent", "code generation", "development"
+      ],
+      "enabled": false
+    },
+    {
+      "name": "arxiv_ai_coding",
+      "type": "arxiv",
+      "endpoint": "http://export.arxiv.org/api/query",
+      "search_terms": [
+        "code assistant", "autonomous agent", "AI code generation", "program synthesis",
+        "automated programming", "intelligent code completion", "code intelligence"
+      ],
+      "categories": ["cs.AI", "cs.SE", "cs.LG", "stat.ML"],
+      "max_results": 50,
+      "sort_by": "submittedDate",
+      "sort_order": "descending",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "code", "programming", "software", "ai", "agent", "assistant", "development"
       ],
       "enabled": true
     }

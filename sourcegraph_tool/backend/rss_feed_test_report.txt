@@ -1,0 +1,129 @@
+
+RSS Feed Testing Report
+=======================
+Generated: 2025-07-06 16:10:08
+
+Summary:
+- Total feeds configured: 16
+- Enabled feeds: 16
+- Working feeds: 11
+- Failed feeds: 5
+- Success rate: 68.8% (of enabled feeds)
+
+Detailed Results:
+
+✅ WORKING aws_news
+  URL: https://aws.amazon.com/blogs/aws/feed/
+  HTTP Status: 200
+  Response Time: 0.28s
+  Entries: 20
+  Feed Title: AWS News Blog
+  Last Updated: 2025-07-06 18:15:05
+
+✅ WORKING dev_to
+  URL: https://dev.to/feed/tag/productivity
+  HTTP Status: 200
+  Response Time: 0.18s
+  Entries: 12
+  Feed Title: DEV Community: productivity
+
+✅ WORKING github_blog
+  URL: https://github.blog/changelog/feed/
+  HTTP Status: 200
+  Response Time: 0.09s
+  Entries: 10
+  Feed Title: Archive: 2025 - GitHub Changelog
+  Last Updated: 2025-07-03 21:27:04
+
+✅ WORKING hackernews
+  URL: https://hnrss.org/newest?q=AI+agent+OR+coding+assistant
+  HTTP Status: 200
+  Response Time: 0.32s
+  Entries: 20
+  Feed Title: Hacker News - Newest: ""AI" "agent" "coding" "assistant""
+  Last Updated: 2025-07-06 20:03:03
+
+✅ WORKING microsoft_devblogs
+  URL: https://devblogs.microsoft.com/feed/
+  HTTP Status: 200
+  Response Time: 0.32s
+  Entries: 10
+  Feed Title: Microsoft for Developers
+  Last Updated: 2025-07-02 17:27:51
+
+✅ WORKING openai
+  URL: https://openai.com/blog/rss.xml
+  HTTP Status: 200
+  Response Time: 0.23s
+  Entries: 581
+  Feed Title: OpenAI News
+  Last Updated: 2025-07-04 00:11:06
+
+✅ WORKING reddit_machinelearning
+  URL: https://www.reddit.com/r/MachineLearning/.rss
+  HTTP Status: 200
+  Response Time: 0.83s
+  Entries: 27
+  Feed Title: Machine Learning
+  Last Updated: 2025-07-06 20:09:56
+
+✅ WORKING sourcegraph
+  URL: https://about.sourcegraph.com/blog/rss.xml
+  HTTP Status: 200
+  Response Time: 0.41s
+  Entries: 100
+  Feed Title: Sourcegraph Blog
+  Last Updated: 2025-07-01 18:53:45
+
+✅ WORKING stack_overflow
+  URL: https://stackoverflow.blog/feed/
+  HTTP Status: 200
+  Response Time: 0.13s
+  Entries: 40
+  Feed Title: Stack Overflow Blog
+  Last Updated: 2025-07-04 04:41:06
+
+✅ WORKING techcrunch
+  URL: https://techcrunch.com/category/artificial-intelligence/feed/
+  HTTP Status: 200
+  Response Time: 0.12s
+  Entries: 20
+  Feed Title: AI News & Artificial Intelligence | TechCrunch
+  Last Updated: 2025-07-06 18:28:16
+
+✅ WORKING ycombinator
+  URL: https://news.ycombinator.com/rss
+  HTTP Status: 200
+  Response Time: 0.27s
+  Entries: 30
+  Feed Title: Hacker News
+
+❌ FAILED anthropic
+  URL: https://www.anthropic.com/news/rss.xml
+  HTTP Status: 404
+  Response Time: 0.37s
+  Error: HTTP 404: Not Found
+
+❌ FAILED google_ai
+  URL: https://ai.googleblog.com/feeds/posts/default
+  HTTP Status: 404
+  Response Time: 0.22s
+  Error: HTTP 404: Not Found
+
+❌ FAILED product_hunt
+  URL: https://www.producthunt.com/feed/tagged/developer-tools
+  HTTP Status: 404
+  Response Time: 0.57s
+  Error: HTTP 404: Not Found
+
+❌ FAILED the_verge_ai
+  URL: https://www.theverge.com/ai/rss/index.xml
+  HTTP Status: 404
+  Response Time: 0.13s
+  Error: HTTP 404: Not Found
+
+❌ FAILED vercel_blog
+  URL: https://vercel.com/blog/rss.xml
+  HTTP Status: 404
+  Response Time: 0.2s
+  Error: HTTP 404: Not Found

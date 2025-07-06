@@ -6,6 +6,7 @@ export interface Insight {
   summary: string;
   topics: string[];
   link?: string;
+  snippet?: string;
   created_at: string;
   updated_at: string;
 }

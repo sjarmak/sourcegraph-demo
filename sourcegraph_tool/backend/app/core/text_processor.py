@@ -139,7 +139,11 @@ class TextProcessor:
         found_topics = []
         for topic in topic_keywords:
             if topic in text_lower:
-                found_topics.append(topic.title())
+                # Special case for AI to keep proper capitalization
+                if topic == "ai":
+                    found_topics.append("AI")
+                else:
+                    found_topics.append(topic.title())
         
         # If no topics found, extract from first few sentences
         if not found_topics:
@@ -157,3 +161,49 @@ class TextProcessor:
         url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
         match = re.search(url_pattern, text)
         return match.group(0) if match else None
+    
+    def extract_relevant_snippet(self, content: str, query: str = None, max_length: int = 200) -> str:
+        """Extract most relevant snippet from content for highlighting."""
+        if not content:
+            return ""
+        
+        # Clean content
+        content = re.sub(r'\s+', ' ', content.strip())
+        
+        if query:
+            # Find sentences containing query terms
+            query_words = query.lower().split()
+            sentences = content.split('.')
+            
+            best_sentence = ""
+            max_score = 0
+            
+            for sentence in sentences:
+                sentence = sentence.strip()
+                if len(sentence) < 20:  # Skip very short sentences
+                    continue
+                    
+                score = sum(1 for word in query_words if word in sentence.lower())
+                if score > max_score:
+                    max_score = score
+                    best_sentence = sentence
+            
+            if best_sentence and max_score > 0:
+                # Truncate if too long
+                if len(best_sentence) > max_length:
+                    return best_sentence[:max_length-3] + "..."
+                return best_sentence
+        
+        # Fallback: return first meaningful sentence or content chunk
+        sentences = content.split('.')
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if len(sentence) >= 20:
+                if len(sentence) > max_length:
+                    return sentence[:max_length-3] + "..."
+                return sentence
+        
+        # Last resort: truncate content
+        if len(content) > max_length:
+            return content[:max_length-3] + "..."
+        return content

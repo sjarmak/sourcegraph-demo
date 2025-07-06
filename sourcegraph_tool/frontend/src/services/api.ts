@@ -36,7 +36,8 @@ export class ApiService {
     if (filters?.dateRange?.end) params.append('date_to', filters.dateRange.end);
     if (filters?.fromHours) params.append('from_hours', filters.fromHours.toString());
     if (filters?.tags?.length) params.append('tags', filters.tags.join(','));
-    if (filters?.limit) params.append('limit', filters.limit.toString());
+    // Only send limit if explicitly set (not undefined)
+    if (filters?.limit !== undefined) params.append('limit', filters.limit.toString());
 
     const queryString = params.toString();
     const endpoint = queryString ? `/api/insights?${queryString}` : '/api/insights';

@@ -27,6 +27,9 @@ async def ingest_insight(
         processor = TextProcessor()
         insight_data = processor.extract_insight(ingest_data.raw_text)
         
+        # Generate snippet for highlighting
+        snippet = processor.extract_relevant_snippet(ingest_data.raw_text)
+        
         # Create database record
         db_insight = Insight(
             tool=insight_data.tool,
@@ -34,7 +37,10 @@ async def ingest_insight(
             title=insight_data.title,
             summary=insight_data.summary,
             topics=insight_data.topics,
-            link=insight_data.link
+            link=insight_data.link,
+            snippet=snippet,
+            matched_keywords=getattr(insight_data, 'matched_keywords', None),
+            source_type=getattr(insight_data, 'source_type', None)
         )
         
         db.add(db_insight)
@@ -58,7 +64,9 @@ async def get_insights(
     keyword: str = Query(None, description="Filter by keyword in title or summary"),
     q: str = Query(None, description="Full-text search query"),
     tags: str = Query(None, description="Comma-separated list of tags to filter by"),
-    limit: int = Query(50, ge=1, le=1000, description="Maximum number of results"),
+    matched_keywords: str = Query(None, description="Comma-separated list of matched keywords to filter by"),
+    source_type: str = Query(None, description="Filter by source type (rss, arxiv, etc.)"),
+    limit: int = Query(500, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     db: Session = Depends(get_db)
 ) -> List[InsightResponse]:
@@ -80,7 +88,7 @@ async def get_insights(
             source_list = [s.strip() for s in sources.split(',')]
             conditions.append(Insight.tool.in_(source_list))
         
-        # Date filtering
+        # Date filtering with default 30-day window
         if from_hours:
             cutoff_time = datetime.now() - timedelta(hours=from_hours)
             conditions.append(Insight.date >= cutoff_time)
@@ -92,12 +100,21 @@ async def get_insights(
             if date_to:
                 date_to_dt = datetime.fromisoformat(date_to)
                 conditions.append(Insight.date <= date_to_dt)
+            
+            # Default to last 30 days if no date filters specified
+            if not date_from and not date_to:
+                cutoff_time = datetime.now() - timedelta(days=30)
+                conditions.append(Insight.date >= cutoff_time)
         
-        # Text search
+        # Enhanced full-text search across all relevant fields
         if q:
             search_condition = or_(
                 Insight.title.ilike(f"%{q}%"),
-                Insight.summary.ilike(f"%{q}%")
+                Insight.summary.ilike(f"%{q}%"),
+                Insight.snippet.ilike(f"%{q}%"),
+                Insight.tool.ilike(f"%{q}%"),
+                Insight.matched_keywords.ilike(f'%"{q.lower()}"%'),  # JSON LIKE search
+                Insight.topics.ilike(f'%"{q.lower()}"%')  # JSON LIKE search
             )
             conditions.append(search_condition)
         
@@ -109,11 +126,23 @@ async def get_insights(
             )
             conditions.append(keyword_condition)
         
-        # Tag filtering (PostgreSQL array contains)
+        # Tag filtering (SQLite-compatible JSON search)
         if tags:
             tag_list = [t.strip() for t in tags.split(',')]
             for tag in tag_list:
-                conditions.append(func.array_to_string(Insight.topics, ',').ilike(f"%{tag}%"))
+                # Use LIKE with JSON for SQLite compatibility
+                conditions.append(Insight.topics.ilike(f'%"{tag}"%'))
+        
+        # Matched keywords filtering (SQLite-compatible JSON search)
+        if matched_keywords:
+            keyword_list = [kw.strip() for kw in matched_keywords.split(',')]
+            for kw in keyword_list:
+                # Use LIKE with JSON for SQLite compatibility
+                conditions.append(Insight.matched_keywords.ilike(f'%"{kw}"%'))
+        
+        # Source type filtering
+        if source_type:
+            conditions.append(Insight.source_type == source_type)
         
         if conditions:
             query = query.filter(and_(*conditions))
@@ -151,6 +180,43 @@ async def get_sources() -> List[str]:
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving sources: {str(e)}")
+
+
+@router.get("/insights/keywords", response_model=List[str])
+async def get_keywords(db: Session = Depends(get_db)) -> List[str]:
+    """
+    Get list of all unique matched keywords.
+    """
+    try:
+        # Get all unique matched keywords from the database
+        insights = db.query(Insight.matched_keywords).filter(
+            Insight.matched_keywords.isnot(None)
+        ).all()
+        
+        all_keywords = set()
+        for insight in insights:
+            if insight.matched_keywords:
+                all_keywords.update(insight.matched_keywords)
+        
+        return sorted(list(all_keywords))
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving keywords: {str(e)}")
+
+
+@router.get("/insights/source-types", response_model=List[str])
+async def get_source_types(db: Session = Depends(get_db)) -> List[str]:
+    """
+    Get list of all unique source types.
+    """
+    try:
+        source_types = db.query(Insight.source_type).distinct().filter(
+            Insight.source_type.isnot(None)
+        ).all()
+        return [st[0] for st in source_types if st[0]]
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving source types: {str(e)}")
 
 
 @router.get("/insights/topics", response_model=List[str])

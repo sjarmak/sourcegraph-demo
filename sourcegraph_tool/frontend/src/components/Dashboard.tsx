@@ -14,6 +14,7 @@ export const Dashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [scrapeStatus, setScrapeStatus] = useState<any>(null);
   const [isScrapingActive, setIsScrapingActive] = useState(false);
+  const [displayCount, setDisplayCount] = useState(20);
 
   useEffect(() => {
     fetchDashboardData();
@@ -25,7 +26,7 @@ export const Dashboard = () => {
       setError(null);
       
       const [insightsData, statusData] = await Promise.all([
-        ApiService.getInsights({ limit: 50 }),
+        ApiService.getInsights({ limit: 100 }), // Fetch more but display 20 initially
         ApiService.getScrapeStatus()
       ]);
       
@@ -160,7 +161,7 @@ export const Dashboard = () => {
           <div className="flex items-center gap-4">
             <InsightFilters insights={insights} onFilterChange={setFilteredInsights} />
             <span className="text-sm text-neutral-500">
-              {filteredInsights.length} of {insights.length} shown
+              {Math.min(displayCount, filteredInsights.length)} of {filteredInsights.length} shown
             </span>
           </div>
         </div>
@@ -176,11 +177,24 @@ export const Dashboard = () => {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredInsights.map((insight) => (
-              <ModernInsightCard key={insight.id} insight={insight} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredInsights.slice(0, displayCount).map((insight) => (
+                <ModernInsightCard key={insight.id} insight={insight} />
+              ))}
+            </div>
+            
+            {displayCount < filteredInsights.length && (
+              <div className="text-center mt-8">
+                <button
+                  onClick={() => setDisplayCount(prev => Math.min(prev + 20, filteredInsights.length))}
+                  className="inline-flex items-center px-6 py-3 border border-neutral-300 text-sm font-medium rounded-md text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sourcegraph-500 transition-colors"
+                >
+                  Show More ({Math.min(20, filteredInsights.length - displayCount)} more)
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

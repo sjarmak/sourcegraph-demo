@@ -28,14 +28,15 @@ export const Insights = () => {
     if (searchParams.get('tags')) urlFilters.tags = searchParams.get('tags')!.split(',');
     
     return {
-      fromHours: 24, // Default to last 24 hours
-      limit: 50,
+      fromHours: 720, // Default to last 30 days (24 * 30)
+      // Remove limit to show all records by default
       ...urlFilters
     };
   });
 
   const { insights, loading, error, refetch } = useInsights(filters);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [displayCount, setDisplayCount] = useState(20);
 
   // Update URL when filters change
   useEffect(() => {
@@ -89,7 +90,7 @@ export const Insights = () => {
 
       <div className="mb-4 flex items-center justify-between">
         <div className="text-sm text-gray-600">
-          {insights.length} insight{insights.length !== 1 ? 's' : ''} found
+          {insights.length} insight{insights.length !== 1 ? 's' : ''} found (showing {Math.min(displayCount, insights.length)} of {insights.length})
         </div>
         {filters.fromHours && (
           <div className="text-xs text-gray-500">
@@ -128,11 +129,24 @@ export const Insights = () => {
           </div>
         </div>
       ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {insights.map((insight) => (
-            <ModernInsightCard key={insight.id} insight={insight} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {insights.slice(0, displayCount).map((insight) => (
+              <ModernInsightCard key={insight.id} insight={insight} searchQuery={filters.q} />
+            ))}
+          </div>
+          
+          {displayCount < insights.length && (
+            <div className="text-center mt-8">
+              <button
+                onClick={() => setDisplayCount(prev => Math.min(prev + 20, insights.length))}
+                className="inline-flex items-center px-6 py-3 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sourcegraph-500 transition-colors"
+              >
+                Show More ({Math.min(20, insights.length - displayCount)} more)
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

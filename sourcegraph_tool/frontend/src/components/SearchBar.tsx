@@ -40,6 +40,8 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
         onFiltersChange({
             ...filters,
             q: searchQuery || undefined,
+            fromHours: undefined, // Clear time filter to search across all history
+            dateRange: undefined, // Clear custom date range
         });
     };
 
@@ -60,6 +62,13 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
         onFiltersChange({
             ...filters,
             sources: newSources.length > 0 ? newSources : undefined,
+        });
+    };
+
+    const selectAllSources = () => {
+        onFiltersChange({
+            ...filters,
+            sources: [...sources],
         });
     };
 
@@ -218,9 +227,34 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Source Filter */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Sources
-                            </label>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    {filters.sources?.length ? `Limited to ${filters.sources.length} source${filters.sources.length === 1 ? '' : 's'}` : 'Search all sources'}
+                                </label>
+                                <div className="flex gap-2">
+                                    {!filters.sources?.length && (
+                                        <button
+                                            type="button"
+                                            onClick={selectAllSources}
+                                            className="text-xs text-blue-600 hover:text-blue-700"
+                                        >
+                                            Select All
+                                        </button>
+                                    )}
+                                    {filters.sources?.length && (
+                                        <button
+                                            type="button"
+                                            onClick={() => onFiltersChange({ ...filters, sources: undefined })}
+                                            className="text-xs text-gray-500 hover:text-gray-700"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">
+                                {filters.sources?.length ? 'Results limited to selected sources' : 'Default: searches across all available sources'}
+                            </p>
                             <div className="space-y-2 max-h-32 overflow-y-auto">
                                 {sources.map((source) => (
                                     <label key={source} className="flex items-center">
@@ -230,7 +264,7 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
                                             onChange={() => handleSourceToggle(source)}
                                             className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                         />
-                                        <span className="ml-2 text-sm text-gray-700 capitalize">{source}</span>
+                                        <span className="ml-2 text-sm text-gray-700 capitalize">{source.replace(/_/g, ' ')}</span>
                                     </label>
                                 ))}
                             </div>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { Bot } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,16 +16,18 @@ export const Layout = ({ children }: LayoutProps) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <nav className="bg-white shadow-lg border-b border-gray-200">
+    <div className="min-h-screen bg-white">
+      <nav className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex">
               <div className="flex-shrink-0 flex items-center">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg mr-3"></div>
-                  <h1 className="text-xl font-bold text-gray-900">
-                    Agentic Insight Tracker
+                  <div className="w-8 h-8 bg-sourcegraph-600 rounded-md mr-3 flex items-center justify-center">
+                    <Bot className="w-5 h-5 text-white" />
+                  </div>
+                  <h1 className="text-xl font-semibold text-neutral-800">
+                    Agent Insights
                   </h1>
                 </div>
               </div>
@@ -35,8 +38,8 @@ export const Layout = ({ children }: LayoutProps) => {
                     to={item.href}
                     className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors duration-200 ${
                       item.current
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-sourcegraph-600 text-sourcegraph-600'
+                        : 'border-transparent text-neutral-500 hover:text-neutral-700 hover:border-neutral-300'
                     }`}
                   >
                     {item.name}
@@ -48,7 +51,7 @@ export const Layout = ({ children }: LayoutProps) => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-8 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {children}
       </main>
     </div>

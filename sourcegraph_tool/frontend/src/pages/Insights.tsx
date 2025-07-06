@@ -1,18 +1,71 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ModernInsightCard } from '../components/ModernInsightCard';
-import { Filters } from '../components/Filters';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { SearchBar } from '../components/SearchBar';
+
+import { LoadingSkeleton } from '../components/LoadingSkeleton';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { useInsights } from '../hooks/useInsights';
+import { ApiService } from '../services/api';
 import type { InsightFilters } from '../types';
 
 export const Insights = () => {
-  const [filters, setFilters] = useState<InsightFilters>({});
-  const { insights, loading, error } = useInsights(filters);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize filters from URL params or defaults
+  const [filters, setFilters] = useState<InsightFilters>(() => {
+    const urlFilters: InsightFilters = {};
+    
+    if (searchParams.get('q')) urlFilters.q = searchParams.get('q')!;
+    if (searchParams.get('sources')) urlFilters.sources = searchParams.get('sources')!.split(',');
+    if (searchParams.get('fromHours')) urlFilters.fromHours = parseInt(searchParams.get('fromHours')!);
+    if (searchParams.get('dateFrom') && searchParams.get('dateTo')) {
+      urlFilters.dateRange = {
+        start: searchParams.get('dateFrom')!,
+        end: searchParams.get('dateTo')!
+      };
+    }
+    if (searchParams.get('tags')) urlFilters.tags = searchParams.get('tags')!.split(',');
+    
+    return {
+      fromHours: 24, // Default to last 24 hours
+      limit: 50,
+      ...urlFilters
+    };
+  });
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  const { insights, loading, error, refetch } = useInsights(filters);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    
+    if (filters.q) params.set('q', filters.q);
+    if (filters.sources?.length) params.set('sources', filters.sources.join(','));
+    if (filters.fromHours) params.set('fromHours', filters.fromHours.toString());
+    if (filters.dateRange?.start) params.set('dateFrom', filters.dateRange.start);
+    if (filters.dateRange?.end) params.set('dateTo', filters.dateRange.end);
+    if (filters.tags?.length) params.set('tags', filters.tags.join(','));
+    
+    setSearchParams(params, { replace: true });
+  }, [filters, setSearchParams]);
+
+  const handleRefreshSources = async () => {
+    try {
+      setIsRefreshing(true);
+      await ApiService.scrapeFeeds();
+      
+      // Wait a moment then refetch insights
+      setTimeout(async () => {
+        await refetch();
+        setIsRefreshing(false);
+      }, 3000);
+    } catch (error) {
+      console.error('Failed to refresh sources:', error);
+      setIsRefreshing(false);
+    }
+  };
 
   if (error) {
     return <ErrorMessage message={error} />;
@@ -21,19 +74,38 @@ export const Insights = () => {
   return (
     <div className="px-4 sm:px-0">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Insights</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Agentic Insight Tracker</h1>
         <p className="mt-1 text-sm text-gray-600">
-          Track and analyze agentic insights across your tools
+          Monitor developments in AI coding agents across multiple sources
         </p>
       </div>
 
-      <Filters filters={filters} onFiltersChange={setFilters} />
+      <SearchBar 
+        filters={filters} 
+        onFiltersChange={setFilters} 
+        onRefresh={handleRefreshSources}
+        isRefreshing={isRefreshing}
+      />
 
-      <div className="mb-4 text-sm text-gray-600">
-        {insights.length} insight{insights.length !== 1 ? 's' : ''} found
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          {insights.length} insight{insights.length !== 1 ? 's' : ''} found
+        </div>
+        {filters.fromHours && (
+          <div className="text-xs text-gray-500">
+            Showing insights from the last {filters.fromHours === 24 ? '24 hours' : 
+              filters.fromHours === 168 ? '7 days' : 
+              filters.fromHours === 720 ? '30 days' : 
+              `${filters.fromHours} hours`}
+          </div>
+        )}
       </div>
 
-      {insights.length === 0 ? (
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Insights</h2>
+
+      {loading ? (
+        <LoadingSkeleton />
+      ) : insights.length === 0 ? (
         <div className="text-center py-12">
           <div className="text-gray-500">
             <svg

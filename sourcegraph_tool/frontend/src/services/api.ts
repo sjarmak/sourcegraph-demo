@@ -25,13 +25,16 @@ export class ApiService {
     return response.json();
   }
 
-  static async getInsights(filters?: InsightFilters & { limit?: number }): Promise<Insight[]> {
+  static async getInsights(filters?: InsightFilters): Promise<Insight[]> {
     const params = new URLSearchParams();
     
     if (filters?.tool) params.append('tool', filters.tool);
+    if (filters?.sources?.length) params.append('sources', filters.sources.join(','));
     if (filters?.keyword) params.append('keyword', filters.keyword);
+    if (filters?.q) params.append('q', filters.q);
     if (filters?.dateRange?.start) params.append('date_from', filters.dateRange.start);
     if (filters?.dateRange?.end) params.append('date_to', filters.dateRange.end);
+    if (filters?.fromHours) params.append('from_hours', filters.fromHours.toString());
     if (filters?.tags?.length) params.append('tags', filters.tags.join(','));
     if (filters?.limit) params.append('limit', filters.limit.toString());
 
@@ -47,6 +50,10 @@ export class ApiService {
 
   static async getTools(): Promise<string[]> {
     return this.request<string[]>('/api/insights/tools');
+  }
+
+  static async getSources(): Promise<string[]> {
+    return this.request<string[]>('/api/insights/sources');
   }
 
   static async scrapeFeeds(hoursBack: number = 24): Promise<{ message: string; status: string }> {

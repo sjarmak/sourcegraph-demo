@@ -1,0 +1,281 @@
+{
+  "sources": [
+    {
+      "name": "hackernews",
+      "type": "rss",
+      "endpoint": "https://hnrss.org/newest?q=AI+agent+OR+coding+assistant",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "artificial intelligence", "machine learning", "agent", "assistant",
+        "coding", "development", "developer", "programming", "productivity",
+        "copilot", "claude", "gpt", "llm", "code generation"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "reddit_machinelearning",
+      "type": "rss", 
+      "endpoint": "https://www.reddit.com/r/MachineLearning/.rss",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "coding", "development", "tool", "agent", "assistant", "programming",
+        "code", "developer", "productivity", "automation", "llm", "gpt"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "dev_to",
+      "type": "rss",
+      "endpoint": "https://dev.to/feed/tag/productivity",
+      "parser_config": {
+        "title_field": "title", 
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "productivity", "developer", "coding", "programming", "tool", "workflow",
+        "automation", "efficiency", "development", "devops", "ci/cd"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "product_hunt",
+      "type": "rss",
+      "endpoint": "https://www.producthunt.com/feed/tagged/developer-tools",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"], 
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "developer", "coding", "programming", "tool", "productivity", "ai",
+        "assistant", "automation", "development", "code", "agent"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "anthropic",
+      "type": "rss",
+      "endpoint": "https://www.anthropic.com/news/rss.xml",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"], 
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "claude", "ai", "assistant", "coding", "development", "tool", "agent"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "openai",
+      "type": "rss", 
+      "endpoint": "https://openai.com/blog/rss.xml",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link", 
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "gpt", "codex", "ai", "assistant", "coding", "development", "tool", "agent"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "sourcegraph",
+      "type": "rss",
+      "endpoint": "https://about.sourcegraph.com/blog/rss.xml", 
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author", 
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "code search", "development", "developer", "coding", "productivity", "tool"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "techcrunch",
+      "type": "rss",
+      "endpoint": "https://techcrunch.com/category/artificial-intelligence/feed/",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "artificial intelligence", "developer", "coding", "programming", "tool", "agent", "assistant", "automation"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "github_blog",
+      "type": "rss", 
+      "endpoint": "https://github.blog/changelog/feed/",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "copilot", "developer", "coding", "programming", "ai", "assistant", "tool", "productivity", "development"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "aws_news",
+      "type": "rss",
+      "endpoint": "https://aws.amazon.com/blogs/aws/feed/",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "ml", "machine learning", "developer", "coding", "programming", "tool", "automation", "devops", "copilot"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "google_ai",
+      "type": "rss",
+      "endpoint": "https://ai.googleblog.com/feeds/posts/default",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "artificial intelligence", "coding", "programming", "developer", "tool", "assistant", "automation"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "vercel_blog",
+      "type": "rss",
+      "endpoint": "https://vercel.com/blog/rss.xml",
+      "parser_config": {
+        "title_field": "title", 
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "developer", "coding", "programming", "tool", "productivity", "development", "v0", "assistant"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "stack_overflow",
+      "type": "rss",
+      "endpoint": "https://stackoverflow.blog/feed/",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"], 
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "developer", "coding", "programming", "tool", "productivity", "development", "assistant", "automation"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "microsoft_devblogs",
+      "type": "rss",
+      "endpoint": "https://devblogs.microsoft.com/feed/",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "copilot", "developer", "coding", "programming", "tool", "productivity", "development", "assistant"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "the_verge_ai",
+      "type": "rss",
+      "endpoint": "https://www.theverge.com/ai/rss/index.xml",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"], 
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "artificial intelligence", "coding", "programming", "developer", "tool", "assistant", "copilot"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "ycombinator",
+      "type": "rss",
+      "endpoint": "https://news.ycombinator.com/rss",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai", "coding", "programming", "developer", "tool", "productivity", "assistant", "agent", "automation"
+      ],
+      "enabled": true
+    }
+  ]
+}

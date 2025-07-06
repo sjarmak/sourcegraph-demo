@@ -12,12 +12,16 @@ export interface Insight {
 
 export interface InsightFilters {
   tool?: string;
+  sources?: string[];
   dateRange?: {
     start: string;
     end: string;
   };
+  fromHours?: number;
   keyword?: string;
+  q?: string;
   tags?: string[];
+  limit?: number;
 }
 
 export interface TrendData {

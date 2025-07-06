@@ -1,13 +1,15 @@
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
+from datetime import datetime, timedelta
 
 from app.db import get_db
 from app.models import Insight
 from app.schemas import InsightIngest, InsightCreate, InsightResponse, InsightFilter
 from app.core import TextProcessor
 from app.core.rss_scraper import RSSFeedScraper
+from app.core.source_manager import SourceManager
 
 router = APIRouter(prefix="/api", tags=["insights"])
 
@@ -49,15 +51,19 @@ async def ingest_insight(
 @router.get("/insights", response_model=List[InsightResponse])
 async def get_insights(
     tool: str = Query(None, description="Filter by tool name"),
+    sources: str = Query(None, description="Comma-separated list of sources to filter by"),
     date_from: str = Query(None, description="Filter from date (YYYY-MM-DD)"),
     date_to: str = Query(None, description="Filter to date (YYYY-MM-DD)"),
+    from_hours: int = Query(None, description="Hours back from now (alternative to date_from/date_to)"),
     keyword: str = Query(None, description="Filter by keyword in title or summary"),
+    q: str = Query(None, description="Full-text search query"),
+    tags: str = Query(None, description="Comma-separated list of tags to filter by"),
     limit: int = Query(50, ge=1, le=1000, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Number of results to skip"),
     db: Session = Depends(get_db)
 ) -> List[InsightResponse]:
     """
-    Get insights with optional filtering.
+    Get insights with optional filtering and search.
     """
     try:
         # Build query
@@ -66,25 +72,48 @@ async def get_insights(
         # Apply filters
         conditions = []
         
+        # Tool/source filtering
         if tool:
             conditions.append(Insight.tool == tool)
         
-        if date_from:
-            from datetime import datetime
-            date_from_dt = datetime.fromisoformat(date_from)
-            conditions.append(Insight.date >= date_from_dt)
+        if sources:
+            source_list = [s.strip() for s in sources.split(',')]
+            conditions.append(Insight.tool.in_(source_list))
         
-        if date_to:
-            from datetime import datetime
-            date_to_dt = datetime.fromisoformat(date_to)
-            conditions.append(Insight.date <= date_to_dt)
+        # Date filtering
+        if from_hours:
+            cutoff_time = datetime.now() - timedelta(hours=from_hours)
+            conditions.append(Insight.date >= cutoff_time)
+        else:
+            if date_from:
+                date_from_dt = datetime.fromisoformat(date_from)
+                conditions.append(Insight.date >= date_from_dt)
+            
+            if date_to:
+                date_to_dt = datetime.fromisoformat(date_to)
+                conditions.append(Insight.date <= date_to_dt)
         
-        if keyword:
+        # Text search
+        if q:
+            search_condition = or_(
+                Insight.title.ilike(f"%{q}%"),
+                Insight.summary.ilike(f"%{q}%")
+            )
+            conditions.append(search_condition)
+        
+        # Backward compatibility for keyword
+        if keyword and not q:
             keyword_condition = or_(
                 Insight.title.ilike(f"%{keyword}%"),
                 Insight.summary.ilike(f"%{keyword}%")
             )
             conditions.append(keyword_condition)
+        
+        # Tag filtering (PostgreSQL array contains)
+        if tags:
+            tag_list = [t.strip() for t in tags.split(',')]
+            for tag in tag_list:
+                conditions.append(func.array_to_string(Insight.topics, ',').ilike(f"%{tag}%"))
         
         if conditions:
             query = query.filter(and_(*conditions))
@@ -101,7 +130,7 @@ async def get_insights(
 @router.get("/insights/tools", response_model=List[str])
 async def get_tools(db: Session = Depends(get_db)) -> List[str]:
     """
-    Get list of all unique tools.
+    Get list of all unique tools/sources.
     """
     try:
         tools = db.query(Insight.tool).distinct().all()
@@ -109,6 +138,19 @@ async def get_tools(db: Session = Depends(get_db)) -> List[str]:
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving tools: {str(e)}")
+
+
+@router.get("/insights/sources", response_model=List[str])
+async def get_sources() -> List[str]:
+    """
+    Get list of all configured sources.
+    """
+    try:
+        source_manager = SourceManager()
+        return source_manager.get_source_names()
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving sources: {str(e)}")
 
 
 @router.get("/insights/topics", response_model=List[str])
@@ -184,26 +226,32 @@ async def get_trends(
 async def scrape_feeds(
     background_tasks: BackgroundTasks,
     hours_back: int = Query(24, description="Hours back to scrape"),
+    sources: str = Query(None, description="Comma-separated list of sources to scrape"),
     db: Session = Depends(get_db)
 ):
     """
-    Trigger RSS feed scraping.
+    Trigger feed scraping using the new source manager.
     """
     try:
-        scraper = RSSFeedScraper()
+        source_manager = SourceManager()
+        
+        # Parse sources if provided
+        source_list = None
+        if sources:
+            source_list = [s.strip() for s in sources.split(',')]
         
         # Run scraping in background
         def run_scraper():
             import asyncio
-            result = asyncio.run(scraper.scrape_all_feeds(db, hours_back))
+            result = asyncio.run(source_manager.scrape_all_sources(db, hours_back, source_list))
             return result
         
         background_tasks.add_task(run_scraper)
         
-        return {"message": "RSS feed scraping started", "status": "started"}
+        return {"message": "Feed scraping started", "status": "started"}
     
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error starting RSS scraping: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error starting feed scraping: {str(e)}")
 
 
 @router.get("/scrape-feeds/status")

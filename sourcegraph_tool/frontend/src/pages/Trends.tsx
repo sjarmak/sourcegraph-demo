@@ -1,31 +1,13 @@
-import { useState, useEffect } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend,
-  type ChartOptions,
-} from 'chart.js';
-import { Bar, Line } from 'react-chartjs-2';
+import { useState, useEffect, lazy, Suspense } from 'react';
+import type { ChartOptions } from 'chart.js';
 import { ApiService } from '../services/api';
 import type { TrendData } from '../types';
 import { format, parseISO } from 'date-fns';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
-  Legend
-);
+// Lazy load chart components to reduce initial bundle size
+const LazyTrendsChart = lazy(() => import('../components/TrendsChart'));
+
+
 
 export const Trends = () => {
   const [trendData, setTrendData] = useState<TrendData[]>([]);
@@ -84,15 +66,32 @@ export const Trends = () => {
     };
   };
 
+  const isMobile = window.innerWidth < 640;
+  
   const chartOptions: ChartOptions<'bar' | 'line'> = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: isMobile ? 'bottom' : 'top' as const,
+        align: 'start' as const,
+        labels: {
+          usePointStyle: true,
+          padding: isMobile ? 15 : 20,
+          font: {
+            size: isMobile ? 12 : 14,
+          },
+        },
       },
       title: {
         display: true,
         text: 'Insight Frequency by Tool Over Time',
+        font: {
+          size: isMobile ? 14 : 16,
+        },
+        padding: {
+          bottom: isMobile ? 15 : 20,
+        },
       },
     },
     scales: {
@@ -100,6 +99,17 @@ export const Trends = () => {
         beginAtZero: true,
         ticks: {
           stepSize: 1,
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+        },
+      },
+      x: {
+        ticks: {
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+          maxRotation: isMobile ? 45 : 0,
         },
       },
     },
@@ -140,16 +150,16 @@ export const Trends = () => {
       </div>
 
       {/* Controls */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+        <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Time Period
             </label>
             <select
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
-              className="rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              className="w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-base sm:text-sm py-2.5 px-3 touch-manipulation"
             >
               <option value="7d">Last 7 days</option>
               <option value="30d">Last 30 days</option>
@@ -157,14 +167,14 @@ export const Trends = () => {
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Chart Type
             </label>
             <select
               value={chartType}
               onChange={(e) => setChartType(e.target.value as 'bar' | 'line')}
-              className="rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+              className="w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-base sm:text-sm py-2.5 px-3 touch-manipulation"
             >
               <option value="bar">Bar Chart</option>
               <option value="line">Line Chart</option>
@@ -174,14 +184,22 @@ export const Trends = () => {
       </div>
 
       {/* Chart */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
         {chartData && chartData.datasets.length > 0 ? (
-          <div className="h-96">
-            {chartType === 'bar' ? (
-              <Bar data={chartData} options={chartOptions} />
-            ) : (
-              <Line data={chartData} options={chartOptions} />
-            )}
+          <div className="h-64 sm:h-80 lg:h-96 overflow-x-auto">
+            <div className="min-w-full" style={{ minWidth: isMobile ? '600px' : 'auto' }}>
+              <Suspense fallback={
+                <div className="flex justify-center items-center h-full">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                </div>
+              }>
+                <LazyTrendsChart 
+                  data={chartData} 
+                  options={chartOptions} 
+                  type={chartType}
+                />
+              </Suspense>
+            </div>
           </div>
         ) : (
           <div className="text-center py-12">
@@ -210,24 +228,24 @@ export const Trends = () => {
 
       {/* Summary Stats */}
       {trendData.length > 0 && (
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900">Total Insights</h3>
-            <p className="text-3xl font-bold text-primary-600">
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900">Total Insights</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-primary-600">
               {trendData.reduce((sum, item) => sum + item.count, 0)}
             </p>
           </div>
           
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900">Active Tools</h3>
-            <p className="text-3xl font-bold text-primary-600">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900">Active Tools</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-primary-600">
               {new Set(trendData.map(item => item.tool)).size}
             </p>
           </div>
           
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-medium text-gray-900">Avg per Day</h3>
-            <p className="text-3xl font-bold text-primary-600">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900">Avg per Day</h3>
+            <p className="text-2xl sm:text-3xl font-bold text-primary-600">
               {Math.round(trendData.reduce((sum, item) => sum + item.count, 0) / 
                 new Set(trendData.map(item => item.date)).size)}
             </p>

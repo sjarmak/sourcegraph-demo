@@ -1,0 +1,26 @@
+{
+  "tool_aliases": {
+    "Sourcegraph": ["sourcegraph", "code graph", "code search", "cody"],
+    "Cody": ["cody", "cody ai"],
+    "Amp": ["amp", "ampcode", "amp code"],
+    "Claude": ["claude", "claude code", "anthropic claude"],
+    "GitHub Copilot": ["copilot", "github copilot", "gh copilot"],
+    "Cursor": ["cursor", "cursor ai", "cursor editor"],
+    "Windsurf": ["windsurf", "windsurf ide"],
+    "Codeium": ["codeium", "codeium ai"],
+    "OpenAI Codex": ["codex", "openai codex"],
+    "Amazon Q": ["amazon q", "aws q", "q developer"],
+    "Continue.dev": ["continue.dev", "continue", "continue ai"],
+    "Replit Ghostwriter": ["replit ghostwriter", "ghostwriter", "replit ai"],
+    "V0": ["v0", "vercel v0"],
+    "Grok": ["grok", "x grok"],
+    "Smol Developer": ["smol developer", "smol dev"]
+  },
+  "concept_keywords": {
+    "AI Code Assistant": ["ai code assistant", "code assistant", "coding assistant", "ai assistant"],
+    "Autonomous Agent": ["autonomous agent", "agentic coding agent", "coding agent", "ai agent"],
+    "Code Generation": ["code generation", "automated coding", "ai programming", "ai development"],
+    "Model Context Protocol": ["mcp", "model context protocol"],
+    "Agentic Tools": ["agentic developer tools", "agentic tools"]
+  }
+}

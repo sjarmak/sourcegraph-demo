@@ -32,7 +32,8 @@ async def ingest_insight(
         
         # Create database record
         db_insight = Insight(
-            tool=insight_data.tool,
+            tool=insight_data.tool,  # Keep for backward compatibility
+            source=insight_data.tool,  # New: source is same as tool for manual ingestion
             date=insight_data.date,
             title=insight_data.title,
             summary=insight_data.summary,
@@ -40,7 +41,9 @@ async def ingest_insight(
             link=insight_data.link,
             snippet=snippet,
             matched_keywords=getattr(insight_data, 'matched_keywords', None),
-            source_type=getattr(insight_data, 'source_type', None)
+            source_type=getattr(insight_data, 'source_type', None),
+            mentioned_tools=[],  # Empty for manual ingestion
+            mentioned_concepts=[]  # Empty for manual ingestion
         )
         
         db.add(db_insight)
@@ -80,13 +83,23 @@ async def get_insights(
         # Apply filters
         conditions = []
         
-        # Tool/source filtering
+        # Tool/source filtering (support both old and new schema)
         if tool:
-            conditions.append(Insight.tool == tool)
+            # Check both old 'tool' field and new 'source' field for backward compatibility
+            tool_condition = or_(
+                Insight.tool == tool,
+                Insight.source == tool if hasattr(Insight, 'source') else False
+            )
+            conditions.append(tool_condition)
         
         if sources:
             source_list = [s.strip() for s in sources.split(',')]
-            conditions.append(Insight.tool.in_(source_list))
+            # Check both old 'tool' field and new 'source' field for backward compatibility
+            sources_condition = or_(
+                Insight.tool.in_(source_list),
+                Insight.source.in_(source_list) if hasattr(Insight, 'source') else False
+            )
+            conditions.append(sources_condition)
         
         # Date filtering with default 30-day window
         if from_hours:
@@ -108,14 +121,24 @@ async def get_insights(
         
         # Enhanced full-text search across all relevant fields
         if q:
-            search_condition = or_(
+            search_conditions = [
                 Insight.title.ilike(f"%{q}%"),
                 Insight.summary.ilike(f"%{q}%"),
                 Insight.snippet.ilike(f"%{q}%"),
                 Insight.tool.ilike(f"%{q}%"),
                 Insight.matched_keywords.ilike(f'%"{q.lower()}"%'),  # JSON LIKE search
                 Insight.topics.ilike(f'%"{q.lower()}"%')  # JSON LIKE search
-            )
+            ]
+            
+            # Add new fields if they exist
+            if hasattr(Insight, 'source'):
+                search_conditions.append(Insight.source.ilike(f"%{q}%"))
+            if hasattr(Insight, 'mentioned_tools'):
+                search_conditions.append(Insight.mentioned_tools.ilike(f'%"{q.lower()}"%'))
+            if hasattr(Insight, 'mentioned_concepts'):
+                search_conditions.append(Insight.mentioned_concepts.ilike(f'%"{q.lower()}"%'))
+            
+            search_condition = or_(*search_conditions)
             conditions.append(search_condition)
         
         # Backward compatibility for keyword
@@ -162,8 +185,18 @@ async def get_tools(db: Session = Depends(get_db)) -> List[str]:
     Get list of all unique tools/sources.
     """
     try:
-        tools = db.query(Insight.tool).distinct().all()
-        return [tool[0] for tool in tools]
+        tools = set()
+        
+        # Get from old 'tool' field
+        old_tools = db.query(Insight.tool).distinct().all()
+        tools.update([tool[0] for tool in old_tools if tool[0]])
+        
+        # Get from new 'source' field if it exists
+        if hasattr(Insight, 'source'):
+            sources = db.query(Insight.source).distinct().all()
+            tools.update([source[0] for source in sources if source[0]])
+        
+        return sorted(list(tools))
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving tools: {str(e)}")
@@ -236,6 +269,68 @@ async def get_topics(db: Session = Depends(get_db)) -> List[str]:
         raise HTTPException(status_code=500, detail=f"Error retrieving topics: {str(e)}")
 
 
+@router.get("/insights/mentioned-tools", response_model=List[str])
+async def get_mentioned_tools(db: Session = Depends(get_db)) -> List[str]:
+    """
+    Get list of all unique mentioned tools.
+    """
+    try:
+        all_tools = set()
+        
+        if hasattr(Insight, 'mentioned_tools'):
+            insights = db.query(Insight.mentioned_tools).filter(
+                Insight.mentioned_tools.isnot(None)
+            ).all()
+            
+            for insight in insights:
+                if insight.mentioned_tools:
+                    try:
+                        import json
+                        if isinstance(insight.mentioned_tools, str):
+                            tools = json.loads(insight.mentioned_tools)
+                        else:
+                            tools = insight.mentioned_tools
+                        all_tools.update(tools)
+                    except (json.JSONDecodeError, TypeError):
+                        continue
+        
+        return sorted(list(all_tools))
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving mentioned tools: {str(e)}")
+
+
+@router.get("/insights/mentioned-concepts", response_model=List[str])
+async def get_mentioned_concepts(db: Session = Depends(get_db)) -> List[str]:
+    """
+    Get list of all unique mentioned concepts.
+    """
+    try:
+        all_concepts = set()
+        
+        if hasattr(Insight, 'mentioned_concepts'):
+            insights = db.query(Insight.mentioned_concepts).filter(
+                Insight.mentioned_concepts.isnot(None)
+            ).all()
+            
+            for insight in insights:
+                if insight.mentioned_concepts:
+                    try:
+                        import json
+                        if isinstance(insight.mentioned_concepts, str):
+                            concepts = json.loads(insight.mentioned_concepts)
+                        else:
+                            concepts = insight.mentioned_concepts
+                        all_concepts.update(concepts)
+                    except (json.JSONDecodeError, TypeError):
+                        continue
+        
+        return sorted(list(all_concepts))
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving mentioned concepts: {str(e)}")
+
+
 @router.get("/insights/trends")
 async def get_trends(
     period: str = Query("7d", description="Time period: 7d, 30d, 90d"),
@@ -270,7 +365,8 @@ async def get_trends(
         
         for insight in insights:
             date_str = insight.date.strftime("%Y-%m-%d")
-            trend_data[date_str][insight.tool] += 1
+            source_name = getattr(insight, 'source', None) or insight.tool
+            trend_data[date_str][source_name] += 1
         
         # Convert to the expected format
         result = []
@@ -333,16 +429,18 @@ async def get_scrape_status(db: Session = Depends(get_db)):
             Insight.created_at >= datetime.now() - timedelta(hours=24)
         ).all()
         
-        # Group by tool
+        # Group by source/tool
         from collections import defaultdict
-        tool_counts = defaultdict(int)
+        source_counts = defaultdict(int)
         
         for insight in recent_insights:
-            tool_counts[insight.tool] += 1
+            # Use new 'source' field if available, otherwise fall back to 'tool'
+            source_name = getattr(insight, 'source', None) or insight.tool
+            source_counts[source_name] += 1
         
         return {
             "total_insights_24h": len(recent_insights),
-            "insights_by_tool": dict(tool_counts),
+            "insights_by_source": dict(source_counts),
             "last_updated": datetime.now().isoformat()
         }
     

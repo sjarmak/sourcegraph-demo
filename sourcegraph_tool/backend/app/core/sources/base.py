@@ -157,6 +157,14 @@ class BaseSource(ABC):
             Exception: If request fails
         """
         try:
+            # Ensure we have proper headers to avoid being blocked by Cloudflare
+            headers = kwargs.get('headers', {})
+            if 'User-Agent' not in headers:
+                headers['User-Agent'] = 'AITrackerBot/1.0 (Agentic Insight Tracker; +https://github.com/your-org/ai-tracker)'
+            headers['Accept'] = 'application/rss+xml, application/xml, text/xml, */*'
+            headers['Accept-Encoding'] = 'gzip, deflate'
+            kwargs['headers'] = headers
+            
             timeout_config = aiohttp.ClientTimeout(total=timeout)
             async with session.get(url, timeout=timeout_config, **kwargs) as response:
                 if response.status == 200:

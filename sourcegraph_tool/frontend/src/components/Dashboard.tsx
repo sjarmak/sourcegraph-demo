@@ -102,7 +102,7 @@ export const Dashboard = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Link className="w-4 h-4 text-neutral-400" />
-                <span className="font-medium text-neutral-700">{Object.keys(scrapeStatus.insights_by_tool).length}</span>
+                <span className="font-medium text-neutral-700">{Object.keys(scrapeStatus.insights_by_source).length}</span>
                 <span className="text-neutral-500">sources</span>
               </div>
               <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ export const Dashboard = () => {
             <div className="text-xs text-neutral-500">insights (24h)</div>
           </div>
           <div className="text-center">
-            <div className="font-semibold text-neutral-800">{Object.keys(scrapeStatus.insights_by_tool).length}</div>
+            <div className="font-semibold text-neutral-800">{Object.keys(scrapeStatus.insights_by_source).length}</div>
             <div className="text-xs text-neutral-500">sources</div>
           </div>
           <div className="text-center">

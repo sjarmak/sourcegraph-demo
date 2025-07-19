@@ -21,7 +21,10 @@ class InsightCreate(BaseModel):
 
 class InsightResponse(BaseModel):
     id: int
-    tool: str
+    tool: str  # Legacy field for backward compatibility
+    source: Optional[str] = None  # New field: where content came from
+    mentioned_tools: Optional[List[str]] = None  # New field: coding agents mentioned
+    mentioned_concepts: Optional[List[str]] = None  # New field: AI/coding concepts mentioned
     date: datetime
     title: str
     summary: str

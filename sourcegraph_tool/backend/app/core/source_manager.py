@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from app.models import Insight
 from app.core.text_processor import TextProcessor
 from app.core.keyword_filter import KeywordFilter
+from app.core.tool_detector import ToolDetector
 from app.core.sources import BaseSource, RssSource, ArxivSource
 from app.schemas import InsightCreate
 
@@ -28,10 +29,21 @@ class SourceManager:
         # Initialize keyword filter
         self.keyword_filter = KeywordFilter.from_config_file(keyword_config_path)
         
+        # Initialize tool detector
+        self.tool_detector = ToolDetector()
+        
         # Override with global keywords from sources.json if available
         global_keywords = self.sources_config.get("global_keywords", [])
         if global_keywords:
             self.keyword_filter.add_global_keywords(global_keywords)
+        
+        # Add relevance keywords from each source configuration
+        for source_config in self.sources_config.get("sources", []):
+            source_name = source_config["name"]
+            relevance_keywords = source_config.get("relevance_keywords", [])
+            if relevance_keywords:
+                self.keyword_filter.add_source_keywords(source_name, relevance_keywords)
+                logger.info(f"Added {len(relevance_keywords)} relevance keywords for source: {source_name}")
         
         # Source handler registry
         self.source_registry = {
@@ -166,7 +178,7 @@ class SourceManager:
                 # Check if we already have this insight (using unique constraint)
                 existing = db.query(Insight).filter(
                     Insight.link == entry['link'],
-                    Insight.tool == source_name
+                    Insight.source == source_name
                 ).first()
                 
                 if existing:
@@ -183,7 +195,6 @@ class SourceManager:
                 insight_data = self.text_processor.extract_insight(raw_text)
                 
                 # Override with source data
-                insight_data.tool = source_name
                 insight_data.date = entry['published']
                 insight_data.link = entry['link']
                 
@@ -195,17 +206,25 @@ class SourceManager:
                 content_for_snippet = entry.get('content') or entry.get('summary', '')
                 snippet = self.text_processor.extract_relevant_snippet(content_for_snippet)
                 
+                # Detect tools and concepts from matched keywords
+                matched_keywords = entry.get('matched_keywords', [])
+                mentioned_tools = self.tool_detector.detect_tools(matched_keywords)
+                mentioned_concepts = self.tool_detector.detect_concepts(matched_keywords)
+                
                 # Create database record with new fields
                 db_insight = Insight(
-                    tool=insight_data.tool,
+                    source=source_name,
+                    mentioned_tools=mentioned_tools,
+                    mentioned_concepts=mentioned_concepts,
                     date=insight_data.date,
                     title=insight_data.title,
                     summary=insight_data.summary,
                     topics=insight_data.topics,
                     link=insight_data.link,
                     snippet=snippet,
-                    matched_keywords=entry.get('matched_keywords', []),
-                    source_type=source_config.get('type', 'unknown')
+                    matched_keywords=matched_keywords,
+                    source_type=source_config.get('type', 'unknown'),
+                    tool=source_name  # Keep for backward compatibility
                 )
                 
                 db.add(db_insight)

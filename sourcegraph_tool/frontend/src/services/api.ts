@@ -65,12 +65,12 @@ export class ApiService {
 
   static async getScrapeStatus(): Promise<{
     total_insights_24h: number;
-    insights_by_tool: Record<string, number>;
+    insights_by_source: Record<string, number>;
     last_updated: string;
   }> {
     return this.request<{
       total_insights_24h: number;
-      insights_by_tool: Record<string, number>;
+      insights_by_source: Record<string, number>;
       last_updated: string;
     }>('/api/scrape-feeds/status');
   }

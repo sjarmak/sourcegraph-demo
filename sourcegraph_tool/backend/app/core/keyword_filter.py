@@ -102,12 +102,10 @@ class KeywordFilter:
                 # Use word boundaries and require some context
                 if re.search(rf'\b{re.escape(keyword.upper())}\b', text) or re.search(rf'\b{re.escape(keyword)}\b', text_lower):
                     matched.append(keyword)
-            # Regular keyword matching for longer terms
-            elif len(keyword) <= 3:
-                if re.search(rf'\b{re.escape(keyword)}\b', text_lower):
-                    matched.append(keyword)
+            # All other keywords - use word boundaries to avoid matching in URLs
             else:
-                if keyword in text_lower:
+                # Use word boundaries for all keywords to avoid matching in URLs/paths
+                if re.search(rf'\b{re.escape(keyword)}\b', text_lower):
                     matched.append(keyword)
         
         return matched

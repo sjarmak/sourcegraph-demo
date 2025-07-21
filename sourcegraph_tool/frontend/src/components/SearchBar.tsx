@@ -394,6 +394,40 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
                             </div>
                         </div>
 
+                        {/* Coding Tools Filter */}
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    {filters.mentioned_tools?.length ? `${filters.mentioned_tools.length} tool${filters.mentioned_tools.length === 1 ? '' : 's'} selected` : 'All AI coding tools'}
+                                </label>
+                                {filters.mentioned_tools?.length && (
+                                    <button
+                                        type="button"
+                                        onClick={() => onFiltersChange({ ...filters, mentioned_tools: undefined })}
+                                        className="text-xs text-gray-500 hover:text-gray-700 py-1 px-2 touch-manipulation"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">
+                                Filter by AI coding tools mentioned in content
+                            </p>
+                            <div className="space-y-3 max-h-32 overflow-y-auto">
+                                {mentionedTools.map((tool) => (
+                                    <label key={tool} className="flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={filters.mentioned_tools?.includes(tool) || false}
+                                            onChange={() => handleToolToggle(tool)}
+                                            className="h-5 w-5 text-purple-600 border-gray-300 rounded focus:ring-purple-500 touch-manipulation"
+                                        />
+                                        <span className="ml-3 text-sm text-gray-700 select-none">{tool}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* Custom Date Range */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">

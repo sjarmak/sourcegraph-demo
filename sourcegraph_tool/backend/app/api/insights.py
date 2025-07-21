@@ -281,8 +281,8 @@ async def get_insights(
             subquery, Insight.id == subquery.c.max_id
         ).order_by(Insight.date.desc()).offset(offset).limit(limit).all()
         
-        # Enhance snippets for search queries if needed
-        if q:
+        # Enhance snippets for search queries or tool filtering if needed
+        if q or mentioned_tools:
             processor = TextProcessor()
             enhanced_insights = []
             
@@ -298,8 +298,18 @@ async def get_insights(
                     topics_text = " ".join(insight.topics)
                     combined_text += f" {topics_text}"
                 
+                # Determine what to highlight
+                highlight_query = q
+                if not q and mentioned_tools and insight.mentioned_tools:
+                    # If filtering by tools but no text query, highlight the detected tools
+                    tool_list = mentioned_tools.split(',')
+                    # Find which tools from the filter are actually in this insight
+                    matching_tools = [tool.strip() for tool in tool_list if tool.strip() in insight.mentioned_tools]
+                    if matching_tools:
+                        highlight_query = matching_tools[0]  # Highlight the first matching tool
+                
                 smart_snippet = processor.extract_relevant_snippet(
-                    combined_text, q, max_length=200, highlight=True
+                    combined_text, highlight_query, max_length=200, highlight=True
                 )
                 
                 # If no highlighting was found, try to create a basic snippet from the main content
@@ -310,8 +320,8 @@ async def get_insights(
                         clean_text = re.sub(r'<[^>]*>', '', main_text)  # Remove HTML
                         clean_text = re.sub(r'\s+', ' ', clean_text).strip()
                         
-                        # Only include results where the query appears in actual content
-                        if q.lower() not in clean_text.lower():
+                        # Only include results where the highlight query appears in actual content (for text search)
+                        if q and q.lower() not in clean_text.lower():
                             # Skip this result if query not found in actual content
                             continue
                         

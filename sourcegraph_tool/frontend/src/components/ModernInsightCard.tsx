@@ -84,25 +84,9 @@ export const ModernInsightCard = ({ insight, searchQuery }: ModernInsightCardPro
     ? truncateAtSentence(finalDisplayText, 200)
     : finalDisplayText;
 
-  // Highlight keywords in text
-  const highlightText = (text: string, query?: string) => {
-    if (!query || !text) return text;
-    
-    // Split query into individual words and filter out short words
-    const keywords = query.toLowerCase().split(/\s+/).filter(k => k.length > 2);
-    let highlightedText = text;
-    
-    keywords.forEach(keyword => {
-      // Escape special regex characters and create word boundary regex
-      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      const regex = new RegExp(`\\b(${escapedKeyword})\\b`, 'gi');
-      highlightedText = highlightedText.replace(regex, '<strong class="bg-yellow-200 px-1 rounded">$1</strong>');
-    });
-    
-    return highlightedText;
-  };
-
-  const finalText = highlightText(truncatedText, searchQuery);
+  // Backend now handles smart highlighting, so we just display the content
+  // which may already contain <mark> tags from the server
+  const finalText = truncatedText;
 
   // Filter out common/generic topics since all content is AI-related
   const filteredTopics = insight.topics?.filter(topic => {

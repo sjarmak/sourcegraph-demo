@@ -162,8 +162,85 @@ class TextProcessor:
         match = re.search(url_pattern, text)
         return match.group(0) if match else None
     
-    def extract_relevant_snippet(self, content: str, query: str = None, max_length: int = 200) -> str:
-        """Extract most relevant snippet from content for highlighting."""
+    def clean_text_for_search(self, text: str) -> str:
+        """Clean text for contextual search by removing URLs and HTML entities."""
+        if not text:
+            return ""
+        
+        # HTML unescape (turns "&amp;" → "&")
+        import html
+        text = html.unescape(text)
+        
+        # Remove URLs
+        text = re.sub(r'https?://\S+', ' ', text)
+        
+        # Remove HTML tags
+        text = re.sub(r'<[^>]+>', ' ', text)
+        
+        # Remove punctuation and normalize spaces
+        text = re.sub(r'[^\w\s]', ' ', text)
+        text = re.sub(r'\s+', ' ', text).strip()
+        
+        return text
+
+    def score_text_relevance(self, text: str, query: str) -> float:
+        """Score text relevance for contextual search queries like 'Amp'."""
+        if not query or not text:
+            return 0.0
+        
+        # Clean text to remove URL artifacts
+        clean_text = self.clean_text_for_search(text).lower()
+        query_lower = query.lower()
+        
+        # Context words that indicate AI/coding relevance
+        context_words = {
+            'ai', 'artificial intelligence', 'code', 'coding', 'programming', 
+            'developer', 'development', 'agent', 'agentic', 'llm', 'language model',
+            'tool', 'assistant', 'copilot', 'framework', 'library', 'ide', 'editor',
+            'automation', 'machine learning', 'neural', 'model', 'chatgpt', 'openai',
+            'github', 'cursor', 'vscode', 'replit', 'claude', 'anthropic'
+        }
+        
+        # Find occurrences of the query term as standalone words
+        import re
+        query_pattern = rf'\b{re.escape(query_lower)}\b'
+        query_matches = re.findall(query_pattern, clean_text)
+        
+        if not query_matches:
+            return 0.0
+        
+        score = 0.0
+        
+        # Score each occurrence based on context
+        for match in re.finditer(query_pattern, clean_text):
+            pos = match.start()
+            
+            # Get context window around the match (50 chars each side)
+            window_start = max(0, pos - 50)
+            window_end = min(len(clean_text), pos + 50)
+            context_window = clean_text[window_start:window_end]
+            
+            # Check if this match is in an irrelevant context (like URLs or random text)
+            if any(artifact in context_window for artifact in ['format png', 'auto webp', 'width height']):
+                continue  # Skip URL-like contexts
+            
+            # Base score for each relevant occurrence
+            match_score = 10.0
+            
+            # Boost score for each context word found nearby
+            context_hits = sum(1 for word in context_words if word in context_window)
+            match_score += context_hits * 5.0
+            
+            # Extra boost if multiple context words appear together
+            if context_hits >= 2:
+                match_score += 10.0
+                
+            score = max(score, match_score)
+        
+        return score
+
+    def extract_relevant_snippet(self, content: str, query: str = None, max_length: int = 200, highlight: bool = True) -> str:
+        """Extract most relevant snippet from content with smart contextual highlighting."""
         if not content:
             return ""
         
@@ -171,28 +248,74 @@ class TextProcessor:
         content = re.sub(r'\s+', ' ', content.strip())
         
         if query:
-            # Find sentences containing query terms
-            query_words = query.lower().split()
-            sentences = content.split('.')
+            # Score relevance and find best matching position
+            relevance_score = self.score_text_relevance(content, query)
             
-            best_sentence = ""
-            max_score = 0
-            
-            for sentence in sentences:
-                sentence = sentence.strip()
-                if len(sentence) < 20:  # Skip very short sentences
-                    continue
+            if relevance_score > 0:
+                # Find the best contextual match for highlighting
+                clean_text = self.clean_text_for_search(content).lower()
+                query_lower = query.lower()
+                query_pattern = rf'\b{re.escape(query_lower)}\b'
+                
+                best_pos = None
+                best_score = 0
+                
+                # Find the best match position with good context
+                for match in re.finditer(query_pattern, clean_text):
+                    pos = match.start()
+                    window_start = max(0, pos - 50)
+                    window_end = min(len(clean_text), pos + 50)
+                    context_window = clean_text[window_start:window_end]
                     
-                score = sum(1 for word in query_words if word in sentence.lower())
-                if score > max_score:
-                    max_score = score
-                    best_sentence = sentence
-            
-            if best_sentence and max_score > 0:
-                # Truncate if too long
-                if len(best_sentence) > max_length:
-                    return best_sentence[:max_length-3] + "..."
-                return best_sentence
+                    # Skip URL-like contexts
+                    if any(artifact in context_window for artifact in ['format png', 'auto webp', 'width height']):
+                        continue
+                    
+                    # Count context words
+                    context_words = {
+                        'ai', 'code', 'coding', 'programming', 'developer', 'agent', 
+                        'agentic', 'llm', 'tool', 'assistant', 'framework'
+                    }
+                    context_hits = sum(1 for word in context_words if word in context_window)
+                    
+                    if context_hits > best_score:
+                        best_score = context_hits
+                        # Map back to original text position (approximately)
+                        best_pos = pos
+                
+                if best_pos is not None:
+                    # Extract snippet around the best match
+                    snippet_start = max(0, best_pos - 100)
+                    snippet_end = min(len(content), best_pos + 100)
+                    best_snippet = content[snippet_start:snippet_end].strip()
+                    
+                    # Add highlighting if requested, but only for contextually relevant matches
+                    if highlight:
+                        # Only highlight the query term when it appears in meaningful context
+                        pattern = rf'\b({re.escape(query)})\b'
+                        
+                        # Check each match before highlighting
+                        def highlight_match(match):
+                            match_text = match.group(0)
+                            match_start = match.start()
+                            
+                            # Get context around this specific match
+                            context_start = max(0, match_start - 30)
+                            context_end = min(len(best_snippet), match_start + 30)
+                            local_context = best_snippet[context_start:context_end].lower()
+                            
+                            # Skip highlighting if it's in URL-like context
+                            if any(artifact in local_context for artifact in ['&amp', 'format=', 'width=', 'auto=webp']):
+                                return match_text  # Return unhighlighted
+                            
+                            return f'<mark>{match_text}</mark>'
+                        
+                        best_snippet = re.sub(pattern, highlight_match, best_snippet, flags=re.IGNORECASE)
+                    
+                    # Truncate if too long
+                    if len(best_snippet) > max_length:
+                        return best_snippet[:max_length-3] + "..."
+                    return best_snippet
         
         # Fallback: return first meaningful sentence or content chunk
         sentences = content.split('.')

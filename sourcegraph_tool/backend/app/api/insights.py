@@ -119,26 +119,85 @@ async def get_insights(
                 cutoff_time = datetime.now() - timedelta(days=30)
                 conditions.append(Insight.date >= cutoff_time)
         
-        # Enhanced full-text search across all relevant fields
+        # Smart contextual search with heuristics
         if q:
-            search_conditions = [
-                Insight.title.ilike(f"%{q}%"),
-                Insight.summary.ilike(f"%{q}%"),
-                Insight.snippet.ilike(f"%{q}%"),
-                Insight.tool.ilike(f"%{q}%"),
-                Insight.matched_keywords.ilike(f'%"{q.lower()}"%'),  # JSON LIKE search
-                Insight.topics.ilike(f'%"{q.lower()}"%')  # JSON LIKE search
+            # Define context words that indicate coding/AI relevance
+            context_words = [
+                'ai', 'artificial intelligence', 'code', 'coding', 'programming', 
+                'developer', 'development', 'agent', 'agentic', 'llm', 'language model',
+                'tool', 'assistant', 'copilot', 'framework', 'library', 'ide', 'editor',
+                'automation', 'machine learning', 'neural', 'model', 'chatgpt', 'openai',
+                'github', 'cursor', 'vscode', 'replit', 'claude', 'anthropic'
             ]
             
-            # Add new fields if they exist
-            if hasattr(Insight, 'source'):
-                search_conditions.append(Insight.source.ilike(f"%{q}%"))
-            if hasattr(Insight, 'mentioned_tools'):
-                search_conditions.append(Insight.mentioned_tools.ilike(f'%"{q.lower()}"%'))
-            if hasattr(Insight, 'mentioned_concepts'):
-                search_conditions.append(Insight.mentioned_concepts.ilike(f'%"{q.lower()}"%'))
+            # For queries like "Amp" that could be ambiguous, apply smart filtering
+            q_lower = q.lower().strip()
+            needs_context_filter = q_lower in ['amp', 'go', 'rust', 'swift', 'dart', 'r']
             
-            search_condition = or_(*search_conditions)
+            if needs_context_filter:
+                # Build search conditions that require both the query term AND context words
+                base_search_conditions = [
+                    Insight.title.ilike(f"%{q}%"),
+                    Insight.summary.ilike(f"%{q}%"),
+                    Insight.snippet.ilike(f"%{q}%"),
+                ]
+                
+                # Add new fields if they exist
+                if hasattr(Insight, 'mentioned_tools'):
+                    base_search_conditions.append(Insight.mentioned_tools.ilike(f'%"{q.lower()}"%'))
+                if hasattr(Insight, 'mentioned_concepts'):
+                    base_search_conditions.append(Insight.mentioned_concepts.ilike(f'%"{q.lower()}"%'))
+                
+                # Context conditions - at least one context word must be present
+                context_conditions = []
+                for word in context_words:
+                    context_conditions.extend([
+                        Insight.title.ilike(f"%{word}%"),
+                        Insight.summary.ilike(f"%{word}%"),
+                        Insight.snippet.ilike(f"%{word}%"),
+                        Insight.topics.ilike(f'%"{word}"%'),
+                        Insight.matched_keywords.ilike(f'%"{word}"%')
+                    ])
+                    
+                    if hasattr(Insight, 'mentioned_tools'):
+                        context_conditions.append(Insight.mentioned_tools.ilike(f'%"{word}"%'))
+                    if hasattr(Insight, 'mentioned_concepts'):
+                        context_conditions.append(Insight.mentioned_concepts.ilike(f'%"{word}"%'))
+                
+                # Exclude results where the term only appears in URL-like contexts
+                exclusion_conditions = [
+                    ~Insight.title.ilike("%&amp;%"),
+                    ~Insight.summary.ilike("%&amp;%"),
+                    ~Insight.snippet.ilike("%&amp;%")
+                ]
+                
+                # Combine: (has query term) AND (has context) AND (not in URL artifacts)
+                search_condition = and_(
+                    or_(*base_search_conditions),
+                    or_(*context_conditions),
+                    *exclusion_conditions
+                )
+                
+            else:
+                # For other queries, use standard search
+                search_conditions = [
+                    Insight.title.ilike(f"%{q}%"),
+                    Insight.summary.ilike(f"%{q}%"),
+                    Insight.snippet.ilike(f"%{q}%"),
+                    Insight.tool.ilike(f"%{q}%"),
+                    Insight.matched_keywords.ilike(f'%"{q.lower()}"%'),
+                    Insight.topics.ilike(f'%"{q.lower()}"%')
+                ]
+                
+                if hasattr(Insight, 'source'):
+                    search_conditions.append(Insight.source.ilike(f"%{q}%"))
+                if hasattr(Insight, 'mentioned_tools'):
+                    search_conditions.append(Insight.mentioned_tools.ilike(f'%"{q.lower()}"%'))
+                if hasattr(Insight, 'mentioned_concepts'):
+                    search_conditions.append(Insight.mentioned_concepts.ilike(f'%"{q.lower()}"%'))
+                
+                search_condition = or_(*search_conditions)
+            
             conditions.append(search_condition)
         
         # Backward compatibility for keyword
@@ -170,10 +229,39 @@ async def get_insights(
         if conditions:
             query = query.filter(and_(*conditions))
         
-        # Apply pagination and ordering
+        # Apply pagination and ordering to the filtered results
         insights = query.order_by(Insight.date.desc()).offset(offset).limit(limit).all()
         
-        return [InsightResponse.model_validate(insight) for insight in insights]
+        # Enhance snippets for search queries if needed
+        if q:
+            processor = TextProcessor()
+            enhanced_insights = []
+            
+            for insight in insights:
+                # Generate a smart snippet with proper highlighting
+                combined_text = f"{insight.title or ''} {insight.summary or ''} {insight.snippet or ''}"
+                smart_snippet = processor.extract_relevant_snippet(
+                    combined_text, q, max_length=200, highlight=True
+                )
+                
+                # Create a copy with enhanced snippet
+                insight_dict = {
+                    key: value for key, value in insight.__dict__.items() 
+                    if not key.startswith('_')
+                }
+                insight_dict['snippet'] = smart_snippet
+                
+                # Convert back to insight-like object for validation
+                class EnhancedInsight:
+                    def __init__(self, data):
+                        for key, value in data.items():
+                            setattr(self, key, value)
+                
+                enhanced_insights.append(EnhancedInsight(insight_dict))
+            
+            return [InsightResponse.model_validate(insight) for insight in enhanced_insights]
+        else:
+            return [InsightResponse.model_validate(insight) for insight in insights]
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving insights: {str(e)}")

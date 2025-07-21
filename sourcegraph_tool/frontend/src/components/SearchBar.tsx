@@ -11,7 +11,7 @@ interface SearchBarProps {
 }
 
 interface FilterPill {
-    type: 'source' | 'timeRange' | 'tag' | 'search';
+    type: 'source' | 'timeRange' | 'tag' | 'search' | 'tool' | 'keyword';
     label: string;
     value: string;
     onRemove: () => void;
@@ -20,19 +20,27 @@ interface FilterPill {
 export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }: SearchBarProps) => {
     const [searchQuery, setSearchQuery] = useState(filters.q || '');
     const [sources, setSources] = useState<string[]>([]);
+    const [mentionedTools, setMentionedTools] = useState<string[]>([]);
+    const [matchedKeywords, setMatchedKeywords] = useState<string[]>([]);
     const [showAdvanced, setShowAdvanced] = useState(false);
 
     useEffect(() => {
-        const fetchSources = async () => {
+        const fetchFilterOptions = async () => {
             try {
-                const sourcesList = await ApiService.getSources();
+                const [sourcesList, toolsList, keywordsList] = await Promise.all([
+                    ApiService.getSources(),
+                    ApiService.getMentionedTools(),
+                    ApiService.getMatchedKeywords()
+                ]);
                 setSources(sourcesList);
+                setMentionedTools(toolsList);
+                setMatchedKeywords(keywordsList);
             } catch (error) {
-                console.error('Failed to fetch sources:', error);
+                console.error('Failed to fetch filter options:', error);
             }
         };
 
-        fetchSources();
+        fetchFilterOptions();
     }, []);
 
     const handleSearchSubmit = (e: React.FormEvent) => {
@@ -62,6 +70,30 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
         onFiltersChange({
             ...filters,
             sources: newSources.length > 0 ? newSources : undefined,
+        });
+    };
+
+    const handleToolToggle = (tool: string) => {
+        const currentTools = filters.mentioned_tools || [];
+        const newTools = currentTools.includes(tool)
+            ? currentTools.filter(t => t !== tool)
+            : [...currentTools, tool];
+
+        onFiltersChange({
+            ...filters,
+            mentioned_tools: newTools.length > 0 ? newTools : undefined,
+        });
+    };
+
+    const handleKeywordToggle = (keyword: string) => {
+        const currentKeywords = filters.matched_keywords || [];
+        const newKeywords = currentKeywords.includes(keyword)
+            ? currentKeywords.filter(k => k !== keyword)
+            : [...currentKeywords, keyword];
+
+        onFiltersChange({
+            ...filters,
+            matched_keywords: newKeywords.length > 0 ? newKeywords : undefined,
         });
     };
 
@@ -96,6 +128,28 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
                 label: `Source: ${source}`,
                 value: source,
                 onRemove: () => handleSourceToggle(source)
+            });
+        });
+    }
+
+    if (filters.mentioned_tools?.length) {
+        filters.mentioned_tools.forEach(tool => {
+            filterPills.push({
+                type: 'tool',
+                label: `Tool: ${tool}`,
+                value: tool,
+                onRemove: () => handleToolToggle(tool)
+            });
+        });
+    }
+
+    if (filters.matched_keywords?.length) {
+        filters.matched_keywords.forEach(keyword => {
+            filterPills.push({
+                type: 'keyword',
+                label: `Keyword: ${keyword}`,
+                value: keyword,
+                onRemove: () => handleKeywordToggle(keyword)
             });
         });
     }
@@ -266,7 +320,7 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
             {/* Advanced Filters */}
             {showAdvanced && (
                 <div className="border-t border-gray-200 p-4 bg-gray-50 sm:block hidden">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-4">
                         {/* Source Filter */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
@@ -345,7 +399,75 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
                                     })}
                                     className="w-full py-2.5 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm touch-manipulation"
                                     placeholder="To date"
-                                />
+                                    />
+                                    </div>
+                                    </div>
+
+                        {/* Mentioned Tools Filter */}
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    {filters.mentioned_tools?.length ? `${filters.mentioned_tools.length} tool${filters.mentioned_tools.length === 1 ? '' : 's'} selected` : 'All AI coding tools'}
+                                </label>
+                                {filters.mentioned_tools?.length && (
+                                    <button
+                                        type="button"
+                                        onClick={() => onFiltersChange({ ...filters, mentioned_tools: undefined })}
+                                        className="text-xs text-gray-500 hover:text-gray-700 py-1 px-2 touch-manipulation"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">
+                                Filter by AI coding tools mentioned in content
+                            </p>
+                            <div className="space-y-3 max-h-32 overflow-y-auto">
+                                {mentionedTools.map((tool) => (
+                                    <label key={tool} className="flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={filters.mentioned_tools?.includes(tool) || false}
+                                            onChange={() => handleToolToggle(tool)}
+                                            className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 touch-manipulation"
+                                        />
+                                        <span className="ml-3 text-sm text-gray-700 select-none">{tool}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Matched Keywords Filter */}
+                        <div>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    {filters.matched_keywords?.length ? `${filters.matched_keywords.length} keyword${filters.matched_keywords.length === 1 ? '' : 's'} selected` : 'All matched keywords'}
+                                </label>
+                                {filters.matched_keywords?.length && (
+                                    <button
+                                        type="button"
+                                        onClick={() => onFiltersChange({ ...filters, matched_keywords: undefined })}
+                                        className="text-xs text-gray-500 hover:text-gray-700 py-1 px-2 touch-manipulation"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">
+                                Filter by RSS feed keywords that matched content
+                            </p>
+                            <div className="space-y-3 max-h-32 overflow-y-auto">
+                                {matchedKeywords.map((keyword) => (
+                                    <label key={keyword} className="flex items-center cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={filters.matched_keywords?.includes(keyword) || false}
+                                            onChange={() => handleKeywordToggle(keyword)}
+                                            className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 touch-manipulation"
+                                        />
+                                        <span className="ml-3 text-sm text-gray-700 select-none">{keyword}</span>
+                                    </label>
+                                ))}
                             </div>
                         </div>
                     </div>

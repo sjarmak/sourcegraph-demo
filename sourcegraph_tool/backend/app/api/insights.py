@@ -62,6 +62,7 @@ async def ingest_insight(
 async def get_insights(
     tool: str = Query(None, description="Filter by tool name"),
     sources: str = Query(None, description="Comma-separated list of sources to filter by"),
+    mentioned_tools: str = Query(None, description="Comma-separated list of mentioned tools to filter by"),
     date_from: str = Query(None, description="Filter from date (YYYY-MM-DD)"),
     date_to: str = Query(None, description="Filter to date (YYYY-MM-DD)"),
     from_hours: int = Query(None, description="Hours back from now (alternative to date_from/date_to)"),
@@ -254,6 +255,13 @@ async def get_insights(
             for kw in keyword_list:
                 # Use LIKE with JSON for SQLite compatibility
                 conditions.append(Insight.matched_keywords.ilike(f'%"{kw}"%'))
+        
+        # Mentioned tools filtering (SQLite-compatible JSON search)
+        if mentioned_tools:
+            tool_list = [tool.strip() for tool in mentioned_tools.split(',')]
+            for tool in tool_list:
+                # Use LIKE with JSON for SQLite compatibility
+                conditions.append(Insight.mentioned_tools.ilike(f'%"{tool}"%'))
         
         # Source type filtering
         if source_type:

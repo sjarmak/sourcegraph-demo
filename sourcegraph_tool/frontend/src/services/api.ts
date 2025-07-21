@@ -60,6 +60,8 @@ export class ApiService {
     
     if (filters?.tool) params.append('tool', filters.tool);
     if (filters?.sources?.length) params.append('sources', filters.sources.join(','));
+    if (filters?.mentioned_tools?.length) params.append('mentioned_tools', filters.mentioned_tools.join(','));
+    if (filters?.matched_keywords?.length) params.append('matched_keywords', filters.matched_keywords.join(','));
     if (filters?.keyword) params.append('keyword', filters.keyword);
     if (filters?.q) params.append('q', filters.q);
     if (filters?.dateRange?.start) params.append('date_from', filters.dateRange.start);
@@ -85,6 +87,14 @@ export class ApiService {
 
   static async getSources(): Promise<string[]> {
     return this.request<string[]>('/api/insights/sources');
+  }
+
+  static async getMentionedTools(): Promise<string[]> {
+    return this.request<string[]>('/api/insights/mentioned-tools');
+  }
+
+  static async getMatchedKeywords(): Promise<string[]> {
+    return this.request<string[]>('/api/insights/keywords');
   }
 
   static async scrapeFeeds(hoursBack: number = 24): Promise<{ message: string; status: string }> {

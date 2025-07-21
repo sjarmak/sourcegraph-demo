@@ -19,6 +19,8 @@ export interface Insight {
 export interface InsightFilters {
   tool?: string;
   sources?: string[];
+  mentioned_tools?: string[];
+  matched_keywords?: string[];
   dateRange?: {
     start: string;
     end: string;

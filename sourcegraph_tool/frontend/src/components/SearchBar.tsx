@@ -313,9 +313,37 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
                             }`}
                     >
                         Last 1 year
-                    </button>
-                </div>
-            </div>
+                        </button>
+                        </div>
+
+                 {/* Quick Coding Agent Filters */}
+                 <div className="mt-3">
+                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                         Filter by AI Coding Tools
+                     </label>
+                     <div className="flex flex-wrap gap-2">
+                         {['Amp', 'Cursor', 'GitHub Copilot', 'Claude', 'Cody'].map((tool) => (
+                             <button
+                                 key={tool}
+                                 onClick={() => handleToolToggle(tool)}
+                                 className={`px-3 py-1.5 text-sm rounded-full border touch-manipulation ${
+                                     filters.mentioned_tools?.includes(tool)
+                                         ? 'bg-purple-100 text-purple-800 border-purple-200'
+                                         : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 active:bg-gray-300'
+                                 }`}
+                             >
+                                 {tool}
+                             </button>
+                         ))}
+                         <button
+                             onClick={() => setShowAdvanced(!showAdvanced)}
+                             className="px-3 py-1.5 text-sm rounded-full border border-gray-300 text-gray-600 hover:bg-gray-50 touch-manipulation"
+                         >
+                             More Tools...
+                         </button>
+                     </div>
+                 </div>
+             </div>
 
             {/* Advanced Filters */}
             {showAdvanced && (

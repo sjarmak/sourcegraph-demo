@@ -239,85 +239,117 @@ class TextProcessor:
         
         return score
 
+    def extract_keyword_context_snippet(self, content: str, query: str, words_around: int = 50) -> str:
+        """Extract snippet showing keyword in context with surrounding words."""
+        if not content or not query:
+            return ""
+        
+        # Normalize text and query
+        normalized_content = re.sub(r'\s+', ' ', content.strip())
+        query_words = [w.strip().lower() for w in query.split() if w.strip()]
+        
+        if not query_words:
+            return normalized_content[:200] + "..." if len(normalized_content) > 200 else normalized_content
+        
+        # Find all matches for any query word
+        best_match = None
+        best_score = 0
+        
+        for query_word in query_words:
+            # Skip very short words
+            if len(query_word) < 3:
+                continue
+                
+            # Find all occurrences of this word (case insensitive)
+            pattern = rf'\b{re.escape(query_word)}\b'
+            
+            for match in re.finditer(pattern, normalized_content, re.IGNORECASE):
+                match_pos = match.start()
+                match_text = match.group(0)
+                
+                # Get context around the match
+                words = normalized_content.split()
+                
+                # Find word position
+                word_positions = []
+                current_pos = 0
+                for i, word in enumerate(words):
+                    word_start = normalized_content.find(word, current_pos)
+                    word_end = word_start + len(word)
+                    word_positions.append((word_start, word_end, i))
+                    current_pos = word_end
+                
+                # Find which word contains our match
+                match_word_idx = None
+                for word_start, word_end, word_idx in word_positions:
+                    if word_start <= match_pos < word_end:
+                        match_word_idx = word_idx
+                        break
+                
+                if match_word_idx is not None:
+                    # Extract surrounding words
+                    start_word = max(0, match_word_idx - words_around)
+                    end_word = min(len(words), match_word_idx + words_around + 1)
+                    
+                    context_words = words[start_word:end_word]
+                    context_snippet = ' '.join(context_words)
+                    
+                    # Check if this is in a URL or other irrelevant context
+                    context_lower = context_snippet.lower()
+                    if any(artifact in context_lower for artifact in [
+                        'format=png', 'auto=webp', 'width=', 'height=', '&amp;', 'https://'
+                    ]):
+                        continue  # Skip URL contexts
+                    
+                    # Score this match based on coding context
+                    context_words_set = {
+                        'ai', 'artificial intelligence', 'code', 'coding', 'programming', 
+                        'developer', 'development', 'agent', 'agentic', 'llm', 'language model',
+                        'tool', 'assistant', 'copilot', 'framework', 'library', 'ide', 'editor',
+                        'automation', 'machine learning', 'model', 'github', 'cursor'
+                    }
+                    
+                    score = sum(1 for word in context_words_set if word in context_lower)
+                    
+                    if score > best_score:
+                        best_score = score
+                        best_match = {
+                            'snippet': context_snippet,
+                            'query_word': query_word,
+                            'match_text': match_text
+                        }
+        
+        if best_match:
+            snippet = best_match['snippet']
+            query_word = best_match['query_word']
+            
+            # Highlight the matched term
+            pattern = rf'\b({re.escape(query_word)})\b'
+            highlighted_snippet = re.sub(pattern, r'<mark>\1</mark>', snippet, flags=re.IGNORECASE)
+            
+            return highlighted_snippet
+        
+        # Fallback: no good matches found, return beginning of content
+        return normalized_content[:200] + "..." if len(normalized_content) > 200 else normalized_content
+
     def extract_relevant_snippet(self, content: str, query: str = None, max_length: int = 200, highlight: bool = True) -> str:
         """Extract most relevant snippet from content with smart contextual highlighting."""
         if not content:
             return ""
         
-        # Clean content
+        if query and highlight:
+            # Use the new keyword context extraction
+            context_snippet = self.extract_keyword_context_snippet(content, query, words_around=50)
+            if context_snippet and '<mark>' in context_snippet:
+                # Truncate if too long
+                if len(context_snippet) > max_length:
+                    return context_snippet[:max_length-3] + "..."
+                return context_snippet
+        
+        # Fallback to original logic
         content = re.sub(r'\s+', ' ', content.strip())
         
-        if query:
-            # Score relevance and find best matching position
-            relevance_score = self.score_text_relevance(content, query)
-            
-            if relevance_score > 0:
-                # Find the best contextual match for highlighting
-                clean_text = self.clean_text_for_search(content).lower()
-                query_lower = query.lower()
-                query_pattern = rf'\b{re.escape(query_lower)}\b'
-                
-                best_pos = None
-                best_score = 0
-                
-                # Find the best match position with good context
-                for match in re.finditer(query_pattern, clean_text):
-                    pos = match.start()
-                    window_start = max(0, pos - 50)
-                    window_end = min(len(clean_text), pos + 50)
-                    context_window = clean_text[window_start:window_end]
-                    
-                    # Skip URL-like contexts
-                    if any(artifact in context_window for artifact in ['format png', 'auto webp', 'width height']):
-                        continue
-                    
-                    # Count context words
-                    context_words = {
-                        'ai', 'code', 'coding', 'programming', 'developer', 'agent', 
-                        'agentic', 'llm', 'tool', 'assistant', 'framework'
-                    }
-                    context_hits = sum(1 for word in context_words if word in context_window)
-                    
-                    if context_hits > best_score:
-                        best_score = context_hits
-                        # Map back to original text position (approximately)
-                        best_pos = pos
-                
-                if best_pos is not None:
-                    # Extract snippet around the best match
-                    snippet_start = max(0, best_pos - 100)
-                    snippet_end = min(len(content), best_pos + 100)
-                    best_snippet = content[snippet_start:snippet_end].strip()
-                    
-                    # Add highlighting if requested, but only for contextually relevant matches
-                    if highlight:
-                        # Only highlight the query term when it appears in meaningful context
-                        pattern = rf'\b({re.escape(query)})\b'
-                        
-                        # Check each match before highlighting
-                        def highlight_match(match):
-                            match_text = match.group(0)
-                            match_start = match.start()
-                            
-                            # Get context around this specific match
-                            context_start = max(0, match_start - 30)
-                            context_end = min(len(best_snippet), match_start + 30)
-                            local_context = best_snippet[context_start:context_end].lower()
-                            
-                            # Skip highlighting if it's in URL-like context
-                            if any(artifact in local_context for artifact in ['&amp', 'format=', 'width=', 'auto=webp']):
-                                return match_text  # Return unhighlighted
-                            
-                            return f'<mark>{match_text}</mark>'
-                        
-                        best_snippet = re.sub(pattern, highlight_match, best_snippet, flags=re.IGNORECASE)
-                    
-                    # Truncate if too long
-                    if len(best_snippet) > max_length:
-                        return best_snippet[:max_length-3] + "..."
-                    return best_snippet
-        
-        # Fallback: return first meaningful sentence or content chunk
+        # Return first meaningful sentence or content chunk
         sentences = content.split('.')
         for sentence in sentences:
             sentence = sentence.strip()

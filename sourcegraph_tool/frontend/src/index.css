@@ -8,3 +8,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Highlight styling for search results */
+mark {
+  background-color: #fef08a;
+  color: #854d0e;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+}

@@ -76,8 +76,8 @@ async function testSearchHighlighting() {
         console.log(`\n--- Result ${i + 1} ---`);
         console.log('Full text:', resultText?.substring(0, 200) + '...');
         
-        // Check for highlighted text - the code uses bg-yellow-200 class in strong tags
-        const highlightedElements = resultItem.locator('strong[class*="bg-yellow-200"], mark, .highlight, .highlighted');
+        // Check for highlighted text - backend now uses <mark> tags
+        const highlightedElements = resultItem.locator('mark');
         const highlightCount = await highlightedElements.count();
         console.log(`Highlighted elements found: ${highlightCount}`);
         

@@ -1,9 +1,10 @@
 {
   "global_keywords": [
-    "sourcegraph", "cody", "amp", "code graph", "cursor", "claude", "anthropic", 
-    "windsurf", "codeium", "copilot", "codex", "grok", "amazon q", "continue.dev",
-    "agentic coding agent", "ai code assistant", "autonomous code agent",
-    "mcp", "model context protocol", "agentic developer tools"
+    "sourcegraph", "cody", "amp", "ampcode", "sourcegraph amp", "code graph", "cursor", "claude", "anthropic", 
+    "windsurf", "codeium", "copilot", "codex", "grok", "amazon q", "continue.dev", "kiro", "junie", "augmentcode", 
+    "gemini code", "replit", "github copilot", "enzzo", "cline", "aider", "lovable",
+    "agentic coding agent", "ai code assistant", "autonomous code agent", "coding agent",
+    "mcp", "model context protocol", "agentic developer tools", "agentic ide", "vibe coding"
   ],
   "sources": [
     {
@@ -116,7 +117,7 @@
     {
       "name": "sourcegraph",
       "type": "rss",
-      "endpoint": "https://about.sourcegraph.com/blog/rss.xml", 
+      "endpoint": "https://sourcegraph.com/blog/rss.xml", 
       "parser_config": {
         "title_field": "title",
         "content_fields": ["summary", "content"],
@@ -126,8 +127,9 @@
         "tags_field": "tags"
       },
       "relevance_keywords": [
-        "code search", "development", "developer", "coding", "productivity", "tool"
+        "cody", "sourcegraph amp", "amp", "ampcode", "deep search", "mcp", "agentic ide", "code search", "development", "developer", "coding", "productivity", "tool"
       ],
+      "always_include": true,
       "enabled": true
     },
     {
@@ -544,6 +546,91 @@
       },
       "relevance_keywords": [
         "code", "programming", "software", "ai", "agent", "assistant", "development"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "github_blog_copilot",
+      "type": "rss",
+      "endpoint": "https://github.blog/ai-and-ml/github-copilot/feed/",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "github copilot", "copilot coding agent", "ai pair programmer", "mcp", "agentic workflows", "agent mode"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "aws_devops_blog",
+      "type": "rss",
+      "endpoint": "https://aws.amazon.com/blogs/devops/feed/",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "codewhisperer", "amazon q", "q developer", "iac", "vulnerability", "ml-powered companion", "ai coding"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "reddit_llmdevs",
+      "type": "rss",
+      "endpoint": "https://www.reddit.com/r/LLMDevs/.rss",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "copilot", "codewhisperer", "cody", "amp", "ampcode", "cursor", "windsurf", "zed", "coding agent", "vibe coding", "agentic ide"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "reddit_programming_ai",
+      "type": "rss",
+      "endpoint": "https://www.reddit.com/r/programming/search.rss?q=AI+coding+OR+AI+assistant+OR+coding+agent&sort=new",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai coding agent", "copilot", "codewhisperer", "ai ide", "agentic", "autonomous coding", "amp", "cursor"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "reddit_ai_agents",
+      "type": "rss",
+      "endpoint": "https://www.reddit.com/r/AIAgents/.rss",
+      "parser_config": {
+        "title_field": "title",
+        "content_fields": ["summary", "content"],
+        "date_fields": ["published_parsed", "updated_parsed"],
+        "link_field": "link",
+        "author_field": "author",
+        "tags_field": "tags"
+      },
+      "relevance_keywords": [
+        "ai agent", "coding agent", "autonomous agent", "amp", "ampcode", "copilot", "cursor", "cody", "sourcegraph", "agentic", "assistant"
       ],
       "enabled": true
     }

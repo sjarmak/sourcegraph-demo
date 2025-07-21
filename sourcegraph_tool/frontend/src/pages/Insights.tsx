@@ -97,6 +97,10 @@ export const Insights = () => {
             Showing insights from the last {filters.fromHours === 24 ? '24 hours' : 
               filters.fromHours === 168 ? '7 days' : 
               filters.fromHours === 720 ? '30 days' : 
+              filters.fromHours === 2160 ? '3 months' :
+              filters.fromHours === 4320 ? '6 months' :
+              filters.fromHours === 6480 ? '9 months' :
+              filters.fromHours === 8760 ? '1 year' :
               `${filters.fromHours} hours`}
           </div>
         )}

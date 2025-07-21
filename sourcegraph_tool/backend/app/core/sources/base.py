@@ -69,6 +69,7 @@ class BaseSource(ABC):
     def _build_text_for_filtering(self, entry: Dict[str, Any]) -> str:
         """
         Build text content for keyword filtering.
+        Only includes title, summary, content, and tags - excludes URLs to avoid HTML noise.
         
         Args:
             entry: Raw entry data
@@ -82,13 +83,17 @@ class BaseSource(ABC):
         if entry.get('title'):
             text_parts.append(entry['title'])
         
-        # Add summary/description
+        # Add summary/description 
         if entry.get('summary'):
-            text_parts.append(entry['summary'])
+            # Clean HTML entities from summary
+            summary = entry['summary'].replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+            text_parts.append(summary)
         
         # Add content if available
         if entry.get('content'):
-            text_parts.append(entry['content'])
+            # Clean HTML entities from content
+            content = entry['content'].replace('&amp;', '&').replace('&lt;', '<').replace('&gt;', '>')
+            text_parts.append(content)
         
         # Add tags
         tags = entry.get('tags', [])
@@ -101,6 +106,19 @@ class BaseSource(ABC):
         
         return ' '.join(text_parts)
     
+    def _build_domain_context(self, entry: Dict[str, Any]) -> str:
+        """Build domain context for vendor-specific keyword matching."""
+        domain_parts = []
+        
+        # Add URL domain for vendor matching (e.g., sourcegraph.com)
+        if entry.get('link'):
+            domain_parts.append(entry['link'])
+        
+        # Add source name
+        domain_parts.append(self.name)
+        
+        return ' '.join(domain_parts)
+    
     def _apply_keyword_filter(self, entry: Dict[str, Any]) -> Dict[str, Any]:
         """
         Apply keyword filtering to an entry.
@@ -111,11 +129,25 @@ class BaseSource(ABC):
         Returns:
             Entry with matched_keywords added, or None if no keywords matched
         """
-        text_for_filtering = self._build_text_for_filtering(entry)
-        matched_keywords = self.keyword_filter.match(self.name, text_for_filtering)
+        # Check if this source should always include entries (e.g., vendor-specific feeds)
+        if self.config.get("always_include", False):
+            entry['matched_keywords'] = [self.name]  # Use source name as matched keyword
+            return entry
         
-        if matched_keywords:
-            entry['matched_keywords'] = matched_keywords
+        # Build text content (title, summary, content only)
+        text_for_filtering = self._build_text_for_filtering(entry)
+        
+        # Build domain context (URLs, source name) for vendor keywords
+        domain_context = self._build_domain_context(entry)
+        
+        # Check both content and domain context
+        content_matches = self.keyword_filter.match_content(self.name, text_for_filtering)
+        domain_matches = self.keyword_filter.match_domain(self.name, domain_context)
+        
+        all_matches = list(set(content_matches + domain_matches))
+        
+        if all_matches:
+            entry['matched_keywords'] = all_matches
             return entry
         else:
             # Entry doesn't match any keywords, filter it out

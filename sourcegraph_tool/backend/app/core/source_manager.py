@@ -202,9 +202,14 @@ class SourceManager:
                 if len(entry['title']) > 10:
                     insight_data.title = entry['title'][:200]
                 
-                # Generate relevant snippet for highlighting
+                # Generate relevant snippet with keyword highlighting
                 content_for_snippet = entry.get('content') or entry.get('summary', '')
-                snippet = self.text_processor.extract_relevant_snippet(content_for_snippet)
+                matched_keywords = entry.get('matched_keywords', [])
+                snippet = self.text_processor.extract_relevant_snippet(
+                    content_for_snippet,
+                    query=' '.join(matched_keywords) if matched_keywords else None,
+                    highlight=True
+                )
                 
                 # Detect tools and concepts from matched keywords
                 matched_keywords = entry.get('matched_keywords', [])

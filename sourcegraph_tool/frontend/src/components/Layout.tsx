@@ -13,7 +13,6 @@ export const Layout = ({ children }: LayoutProps) => {
 
   const navigation = [
     { name: 'Dashboard', href: '/', current: location.pathname === '/' },
-    { name: 'Insights', href: '/insights', current: location.pathname === '/insights' },
     { name: 'Trends', href: '/trends', current: location.pathname === '/trends' },
   ];
 

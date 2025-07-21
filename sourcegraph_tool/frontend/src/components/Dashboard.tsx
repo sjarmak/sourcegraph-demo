@@ -2,41 +2,42 @@ import { useState, useEffect } from 'react';
 import { RefreshCw, BarChart3, Link, Clock } from 'lucide-react';
 import { ApiService } from '../services/api';
 import { ModernInsightCard } from './ModernInsightCard';
-import { InsightFilters } from './InsightFilters';
+import { SearchBar } from './SearchBar';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
-import type { Insight } from '../types';
+import { useInsights } from '../hooks/useInsights';
+import type { Insight, InsightFilters } from '../types';
 
 export const Dashboard = () => {
-  const [insights, setInsights] = useState<Insight[]>([]);
-  const [filteredInsights, setFilteredInsights] = useState<Insight[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<InsightFilters>({
+    fromHours: 168, // Default to last 7 days
+  });
+  
+  const { insights, loading, error, refetch } = useInsights(filters);
   const [scrapeStatus, setScrapeStatus] = useState<any>(null);
   const [isScrapingActive, setIsScrapingActive] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [displayCount, setDisplayCount] = useState(20);
 
   useEffect(() => {
-    fetchDashboardData();
+    fetchScrapeStatus();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchScrapeStatus = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      const [insightsData, statusData] = await Promise.all([
-        ApiService.getInsights({ limit: 100 }), // Fetch more but display 20 initially
-        ApiService.getScrapeStatus()
-      ]);
-      
-      setInsights(insightsData);
-      setFilteredInsights(insightsData);
+      const statusData = await ApiService.getScrapeStatus();
       setScrapeStatus(statusData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load dashboard data');
+      console.error('Failed to load scrape status', err);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
     } finally {
-      setLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -52,9 +53,7 @@ export const Dashboard = () => {
           setScrapeStatus(status);
           
           // Refresh insights after scraping
-          const newInsights = await ApiService.getInsights({ limit: 50 });
-          setInsights(newInsights);
-          setFilteredInsights(newInsights);
+          await refetch();
         } catch (err) {
           clearInterval(pollInterval);
         }
@@ -157,40 +156,53 @@ export const Dashboard = () => {
       {/* Recent Insights */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-neutral-800">Recent Insights</h2>
-          <div className="flex items-center gap-4">
-            <InsightFilters insights={insights} onFilterChange={setFilteredInsights} />
-            <span className="text-sm text-neutral-500">
-              {Math.min(displayCount, filteredInsights.length)} of {filteredInsights.length} shown
-            </span>
-          </div>
+          <h2 className="text-lg font-semibold text-neutral-800">AI Coding Insights</h2>
+          <span className="text-sm text-neutral-500">
+            {Math.min(displayCount, insights.length)} of {insights.length} shown
+          </span>
+        </div>
+        
+        <div className="mb-6">
+          <SearchBar 
+            filters={filters} 
+            onFiltersChange={setFilters} 
+            onRefresh={handleRefresh}
+            isRefreshing={isRefreshing}
+          />
         </div>
 
-        {filteredInsights.length === 0 ? (
-          <div className="text-center py-16 bg-neutral-50 rounded-lg border border-neutral-200">
-            <div className="text-neutral-500">
-              <BarChart3 className="mx-auto h-8 w-8 text-neutral-300 mb-3" />
-              <h3 className="text-base font-medium text-neutral-700 mb-2">No insights yet</h3>
-              <p className="text-sm text-neutral-500">
-                Click "Refresh Feeds" to start collecting insights
-              </p>
+        {insights.length === 0 ? (
+          loading ? (
+            <div className="text-center py-16 bg-neutral-50 rounded-lg border border-neutral-200">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+              <p className="text-neutral-500">Loading insights...</p>
             </div>
-          </div>
+          ) : (
+            <div className="text-center py-16 bg-neutral-50 rounded-lg border border-neutral-200">
+              <div className="text-neutral-500">
+                <BarChart3 className="mx-auto h-8 w-8 text-neutral-300 mb-3" />
+                <h3 className="text-base font-medium text-neutral-700 mb-2">No insights found</h3>
+                <p className="text-sm text-neutral-500">
+                  Try adjusting your filters or click "Refresh Feeds" to load more content
+                </p>
+              </div>
+            </div>
+          )
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredInsights.slice(0, displayCount).map((insight) => (
+            <div className="space-y-4">
+              {insights.slice(0, displayCount).map((insight) => (
                 <ModernInsightCard key={insight.id} insight={insight} />
               ))}
             </div>
             
-            {displayCount < filteredInsights.length && (
+            {displayCount < insights.length && (
               <div className="text-center mt-8">
                 <button
-                  onClick={() => setDisplayCount(prev => Math.min(prev + 20, filteredInsights.length))}
+                  onClick={() => setDisplayCount(prev => Math.min(prev + 20, insights.length))}
                   className="inline-flex items-center px-6 py-3 border border-neutral-300 text-sm font-medium rounded-md text-neutral-700 bg-white hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sourcegraph-500 transition-colors"
                 >
-                  Show More ({Math.min(20, filteredInsights.length - displayCount)} more)
+                  Show More ({Math.min(20, insights.length - displayCount)} more)
                 </button>
               </div>
             )}

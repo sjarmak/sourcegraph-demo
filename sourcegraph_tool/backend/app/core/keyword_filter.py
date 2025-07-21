@@ -3,6 +3,7 @@ Centralized keyword filtering for content relevance detection.
 """
 import json
 import logging
+import re
 from pathlib import Path
 from typing import List, Dict, Set, Optional
 
@@ -64,34 +65,88 @@ class KeywordFilter:
             # Return empty filter as fallback
             return cls()
     
-    def match(self, source_name: str, text: str) -> List[str]:
+    def match_content(self, source_name: str, text: str) -> List[str]:
         """
-        Check if text matches keywords and return list of matched keywords.
+        Check content text (title, summary, body) for contextual keyword matches.
         
         Args:
-            source_name: Name of the source (for per-source overrides)
-            text: Text content to check for keyword matches
+            source_name: Name of the source
+            text: Content text to check
             
         Returns:
-            List of matched keywords (case-insensitive)
+            List of matched keywords with contextual validation
         """
         if not text:
             return []
         
-        # Get keyword set for this source
         keywords_to_check = self.global_keywords | self.overrides.get(source_name, set())
-        
         if not keywords_to_check:
-            return []  # No keywords configured, no matches
+            return []
         
         text_lower = text.lower()
         matched = []
         
+        # Coding agent context keywords
+        coding_context = ["coding", "agent", "assistant", "ai", "programming", "developer", "sourcegraph", "cody", "copilot", "ide", "editor", "code", "development"]
+        has_coding_context = any(ctx in text_lower for ctx in coding_context)
+        
         for keyword in keywords_to_check:
-            if keyword in text_lower:
+            # Special handling for "amp" - must be capitalized and in coding context
+            if keyword == "amp":
+                # Only match "Amp", "AMP", or "AmpCode" in coding context
+                if has_coding_context:
+                    if re.search(r'\b(Amp|AMP|AmpCode)\b', text):
+                        matched.append(keyword)
+            # Special handling for other short ambiguous keywords
+            elif keyword in ["ai", "ml", "qa", "ci", "cd"]:
+                # Use word boundaries and require some context
+                if re.search(rf'\b{re.escape(keyword.upper())}\b', text) or re.search(rf'\b{re.escape(keyword)}\b', text_lower):
+                    matched.append(keyword)
+            # Regular keyword matching for longer terms
+            elif len(keyword) <= 3:
+                if re.search(rf'\b{re.escape(keyword)}\b', text_lower):
+                    matched.append(keyword)
+            else:
+                if keyword in text_lower:
+                    matched.append(keyword)
+        
+        return matched
+    
+    def match_domain(self, source_name: str, domain_text: str) -> List[str]:
+        """
+        Check domain/URL context for vendor-specific keywords.
+        
+        Args:
+            source_name: Name of the source
+            domain_text: Domain/URL text to check
+            
+        Returns:
+            List of matched vendor keywords
+        """
+        if not domain_text:
+            return []
+        
+        keywords_to_check = self.global_keywords | self.overrides.get(source_name, set())
+        if not keywords_to_check:
+            return []
+        
+        domain_lower = domain_text.lower()
+        matched = []
+        
+        # Only match vendor/domain keywords in URLs
+        vendor_keywords = ["sourcegraph", "github", "openai", "anthropic", "microsoft", "google", "aws"]
+        
+        for keyword in keywords_to_check:
+            if keyword in vendor_keywords and keyword in domain_lower:
                 matched.append(keyword)
         
         return matched
+    
+    def match(self, source_name: str, text: str) -> List[str]:
+        """
+        Legacy method for backward compatibility.
+        """
+        return self.match_content(source_name, text)
     
     def is_relevant(self, source_name: str, text: str) -> bool:
         """

@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, func
 from datetime import datetime, timedelta
+import re
 
 from app.db import get_db
 from app.models import Insight
@@ -135,18 +136,32 @@ async def get_insights(
             needs_context_filter = q_lower in ['amp', 'go', 'rust', 'swift', 'dart', 'r']
             
             if needs_context_filter:
-                # Build search conditions that require both the query term AND context words
+                # Build search conditions using word boundaries to avoid substring matches
                 base_search_conditions = [
-                    Insight.title.ilike(f"%{q}%"),
-                    Insight.summary.ilike(f"%{q}%"),
-                    Insight.snippet.ilike(f"%{q}%"),
+                    # Use word boundaries for text fields to avoid "amp" matching "vampire"
+                    Insight.title.ilike(f"% {q} %"),
+                    Insight.title.ilike(f"{q} %"),  
+                    Insight.title.ilike(f"% {q}"),
+                    Insight.title.ilike(f"{q}"),  # exact match
+                    Insight.summary.ilike(f"% {q} %"),
+                    Insight.summary.ilike(f"{q} %"),
+                    Insight.summary.ilike(f"% {q}"),
+                    Insight.snippet.ilike(f"% {q} %"),
+                    Insight.snippet.ilike(f"{q} %"),
+                    Insight.snippet.ilike(f"% {q}"),
                 ]
                 
-                # Add new fields if they exist
+                # Add structured field searches (these are precise)
                 if hasattr(Insight, 'mentioned_tools'):
                     base_search_conditions.append(Insight.mentioned_tools.ilike(f'%"{q.lower()}"%'))
                 if hasattr(Insight, 'mentioned_concepts'):
                     base_search_conditions.append(Insight.mentioned_concepts.ilike(f'%"{q.lower()}"%'))
+                
+                # Most importantly - exact matches in keywords
+                base_search_conditions.extend([
+                    Insight.matched_keywords.ilike(f'%"{q.lower()}"%'),
+                    Insight.topics.ilike(f'%"{q.lower()}"%')
+                ])
                 
                 # Context conditions - at least one context word must be present
                 context_conditions = []
@@ -179,22 +194,40 @@ async def get_insights(
                 )
                 
             else:
-                # For other queries, use standard search
+                # Simple but effective search focusing on exact keyword matches
+                # This avoids substring matches like "amp" in "vampire"
+                
                 search_conditions = [
-                    Insight.title.ilike(f"%{q}%"),
-                    Insight.summary.ilike(f"%{q}%"),
-                    Insight.snippet.ilike(f"%{q}%"),
-                    Insight.tool.ilike(f"%{q}%"),
+                    # Exact matches in structured fields (highest priority)
                     Insight.matched_keywords.ilike(f'%"{q.lower()}"%'),
-                    Insight.topics.ilike(f'%"{q.lower()}"%')
+                    Insight.topics.ilike(f'%"{q.lower()}"%'),
                 ]
                 
-                if hasattr(Insight, 'source'):
-                    search_conditions.append(Insight.source.ilike(f"%{q}%"))
+                # Add mentioned tools/concepts if available
                 if hasattr(Insight, 'mentioned_tools'):
                     search_conditions.append(Insight.mentioned_tools.ilike(f'%"{q.lower()}"%'))
                 if hasattr(Insight, 'mentioned_concepts'):
                     search_conditions.append(Insight.mentioned_concepts.ilike(f'%"{q.lower()}"%'))
+                
+                # For longer queries (>3 chars), add some text-based search with word boundaries
+                if len(q) > 3:
+                    search_conditions.extend([
+                        # Only exact title/tool matches to avoid substring issues
+                        Insight.title.ilike(f"{q}"),  # exact title match
+                        Insight.tool.ilike(f"{q}"),   # exact tool match
+                        # Word boundary patterns for title/summary
+                        Insight.title.ilike(f"% {q} %"),
+                        Insight.title.ilike(f"{q} %"),  
+                        Insight.title.ilike(f"% {q}"),
+                    ])
+                    
+                    # Only add summary search for very specific cases
+                    if len(q) >= 5:  # Longer queries are less likely to cause false positives
+                        search_conditions.extend([
+                            Insight.summary.ilike(f"% {q} %"),
+                            Insight.summary.ilike(f"{q} %"),
+                            Insight.summary.ilike(f"% {q}")
+                        ])
                 
                 search_condition = or_(*search_conditions)
             
@@ -229,8 +262,16 @@ async def get_insights(
         if conditions:
             query = query.filter(and_(*conditions))
         
-        # Apply pagination and ordering to the filtered results
-        insights = query.order_by(Insight.date.desc()).offset(offset).limit(limit).all()
+        # Apply deduplication by title+source to prevent duplicate content, then pagination
+        # First get all matching IDs with the latest date for each title+source combination
+        subquery = query.with_entities(
+            func.max(Insight.id).label('max_id')
+        ).group_by(Insight.title, Insight.source).subquery()
+        
+        # Join back to get the full records, then apply pagination
+        insights = db.query(Insight).join(
+            subquery, Insight.id == subquery.c.max_id
+        ).order_by(Insight.date.desc()).offset(offset).limit(limit).all()
         
         # Enhance snippets for search queries if needed
         if q:
@@ -240,9 +281,38 @@ async def get_insights(
             for insight in insights:
                 # Generate a smart snippet with proper highlighting
                 combined_text = f"{insight.title or ''} {insight.summary or ''} {insight.snippet or ''}"
+                
+                # Also include keywords and topics for better highlighting context
+                if insight.matched_keywords:
+                    keywords_text = " ".join(insight.matched_keywords)
+                    combined_text += f" {keywords_text}"
+                if insight.topics:
+                    topics_text = " ".join(insight.topics)
+                    combined_text += f" {topics_text}"
+                
                 smart_snippet = processor.extract_relevant_snippet(
                     combined_text, q, max_length=200, highlight=True
                 )
+                
+                # If no highlighting was found, try to create a basic snippet from the main content
+                if not smart_snippet or '<mark>' not in smart_snippet:
+                    main_text = f"{insight.title or ''} {insight.summary or ''}"
+                    if main_text.strip():
+                        # Clean and truncate the text for display
+                        clean_text = re.sub(r'<[^>]*>', '', main_text)  # Remove HTML
+                        clean_text = re.sub(r'\s+', ' ', clean_text).strip()
+                        
+                        # Only include results where the query appears in actual content
+                        if q.lower() not in clean_text.lower():
+                            # Skip this result if query not found in actual content
+                            continue
+                        
+                        if len(clean_text) > 200:
+                            smart_snippet = clean_text[:197] + "..."
+                        else:
+                            smart_snippet = clean_text
+                    else:
+                        smart_snippet = "No preview available"
                 
                 # Create a copy with enhanced snippet
                 insight_dict = {

@@ -1,129 +1,268 @@
 
 RSS Feed Testing Report
 =======================
-Generated: 2025-07-06 16:10:08
+Generated: 2025-07-20 09:42:09
 
 Summary:
-- Total feeds configured: 16
-- Enabled feeds: 16
-- Working feeds: 11
-- Failed feeds: 5
-- Success rate: 68.8% (of enabled feeds)
+- Total feeds configured: 36
+- Enabled feeds: 29
+- Working feeds: 27
+- Failed feeds: 2
+- Success rate: 93.1% (of enabled feeds)
 
 Detailed Results:
+
+✅ WORKING aws_devops_blog
+  URL: https://aws.amazon.com/blogs/devops/feed/
+  HTTP Status: 200
+  Response Time: 0.16s
+  Entries: 20
+  Feed Title: AWS DevOps & Developer Productivity Blog
+  Last Updated: 2025-07-17 13:15:09
 
 ✅ WORKING aws_news
   URL: https://aws.amazon.com/blogs/aws/feed/
   HTTP Status: 200
-  Response Time: 0.28s
+  Response Time: 0.13s
   Entries: 20
   Feed Title: AWS News Blog
-  Last Updated: 2025-07-06 18:15:05
+  Last Updated: 2025-07-18 19:52:23
 
 ✅ WORKING dev_to
   URL: https://dev.to/feed/tag/productivity
   HTTP Status: 200
-  Response Time: 0.18s
+  Response Time: 0.07s
   Entries: 12
   Feed Title: DEV Community: productivity
 
-✅ WORKING github_blog
-  URL: https://github.blog/changelog/feed/
+✅ WORKING dev_to_agents
+  URL: https://dev.to/feed/tag/agents
   HTTP Status: 200
-  Response Time: 0.09s
+  Response Time: 0.1s
+  Entries: 12
+  Feed Title: DEV Community: agents
+
+✅ WORKING dev_to_ai
+  URL: https://dev.to/feed/tag/ai
+  HTTP Status: 200
+  Response Time: 0.07s
+  Entries: 12
+  Feed Title: DEV Community: ai
+
+✅ WORKING dev_to_developers
+  URL: https://dev.to/feed/tag/developers
+  HTTP Status: 200
+  Response Time: 0.08s
+  Entries: 12
+  Feed Title: DEV Community: developers
+
+✅ WORKING github_blog
+  URL: https://github.blog/feed/
+  HTTP Status: 200
+  Response Time: 0.1s
   Entries: 10
-  Feed Title: Archive: 2025 - GitHub Changelog
-  Last Updated: 2025-07-03 21:27:04
+  Feed Title: The GitHub Blog
+  Last Updated: 2025-07-18 21:19:42
+
+✅ WORKING github_blog_copilot
+  URL: https://github.blog/ai-and-ml/github-copilot/feed/
+  HTTP Status: 200
+  Response Time: 0.11s
+  Entries: 10
+  Feed Title: The latest on GitHub Copilot - The GitHub Blog
+  Last Updated: 2025-07-17 18:29:46
 
 ✅ WORKING hackernews
   URL: https://hnrss.org/newest?q=AI+agent+OR+coding+assistant
   HTTP Status: 200
-  Response Time: 0.32s
+  Response Time: 0.09s
   Entries: 20
   Feed Title: Hacker News - Newest: ""AI" "agent" "coding" "assistant""
-  Last Updated: 2025-07-06 20:03:03
+  Last Updated: 2025-07-20 13:33:00
+
+✅ WORKING medium_ai_agents
+  URL: https://medium.com/feed/tag/ai-agents
+  HTTP Status: 200
+  Response Time: 0.18s
+  Entries: 10
+  Feed Title: Ai Agents on Medium
+  Last Updated: 2025-07-20 13:33:21
+
+✅ WORKING medium_code_search
+  URL: https://medium.com/feed/tag/code-search
+  HTTP Status: 200
+  Response Time: 0.19s
+  Entries: 10
+  Feed Title: Code Search on Medium
+  Last Updated: 2025-07-20 13:33:22
+
+✅ WORKING medium_developer_tools
+  URL: https://medium.com/feed/tag/developer-tools
+  HTTP Status: 200
+  Response Time: 0.15s
+  Entries: 10
+  Feed Title: Developer Tools on Medium
+  Last Updated: 2025-07-20 13:33:23
 
 ✅ WORKING microsoft_devblogs
   URL: https://devblogs.microsoft.com/feed/
   HTTP Status: 200
-  Response Time: 0.32s
+  Response Time: 0.33s
   Entries: 10
   Feed Title: Microsoft for Developers
-  Last Updated: 2025-07-02 17:27:51
+  Last Updated: 2025-07-18 18:43:29
 
 ✅ WORKING openai
   URL: https://openai.com/blog/rss.xml
   HTTP Status: 200
-  Response Time: 0.23s
-  Entries: 581
+  Response Time: 0.15s
+  Entries: 591
   Feed Title: OpenAI News
-  Last Updated: 2025-07-04 00:11:06
+  Last Updated: 2025-07-19 00:19:13
+
+✅ WORKING reddit_ai_agents
+  URL: https://www.reddit.com/r/AIAgents/.rss
+  HTTP Status: 200
+  Response Time: 0.43s
+  Entries: 25
+  Feed Title: AIagents
+  Last Updated: 2025-07-20 13:42:09
+
+✅ WORKING reddit_llmdevs
+  URL: https://www.reddit.com/r/LLMDevs/.rss
+  HTTP Status: 200
+  Response Time: 0.49s
+  Entries: 27
+  Feed Title: LLMDevs
+  Last Updated: 2025-07-20 13:42:07
+
+✅ WORKING reddit_localllama
+  URL: https://www.reddit.com/r/LocalLLaMA/.rss
+  HTTP Status: 200
+  Response Time: 0.34s
+  Entries: 25
+  Feed Title: LocalLlama
+  Last Updated: 2025-07-20 13:41:58
 
 ✅ WORKING reddit_machinelearning
   URL: https://www.reddit.com/r/MachineLearning/.rss
   HTTP Status: 200
-  Response Time: 0.83s
+  Response Time: 0.43s
   Entries: 27
   Feed Title: Machine Learning
-  Last Updated: 2025-07-06 20:09:56
+  Last Updated: 2025-07-20 13:41:56
+
+✅ WORKING reddit_programming
+  URL: https://www.reddit.com/r/programming/.rss
+  HTTP Status: 200
+  Response Time: 0.26s
+  Entries: 25
+  Feed Title: programming
+  Last Updated: 2025-07-20 13:41:57
+
+✅ WORKING reddit_programming_ai
+  URL: https://www.reddit.com/r/programming/search.rss?q=AI+coding+OR+AI+assistant+OR+coding+agent&sort=new
+  HTTP Status: 200
+  Response Time: 0.42s
+  Entries: 25
+  Feed Title: programming: search results - AI coding OR AI assistant OR coding agent
+  Last Updated: 2025-07-20 13:42:08
 
 ✅ WORKING sourcegraph
-  URL: https://about.sourcegraph.com/blog/rss.xml
+  URL: https://sourcegraph.com/blog/rss.xml
   HTTP Status: 200
-  Response Time: 0.41s
+  Response Time: 0.19s
   Entries: 100
   Feed Title: Sourcegraph Blog
-  Last Updated: 2025-07-01 18:53:45
+  Last Updated: 2025-07-18 15:38:44
 
 ✅ WORKING stack_overflow
   URL: https://stackoverflow.blog/feed/
   HTTP Status: 200
-  Response Time: 0.13s
+  Response Time: 0.08s
   Entries: 40
   Feed Title: Stack Overflow Blog
-  Last Updated: 2025-07-04 04:41:06
+  Last Updated: 2025-07-18 04:41:04
 
 ✅ WORKING techcrunch
   URL: https://techcrunch.com/category/artificial-intelligence/feed/
   HTTP Status: 200
-  Response Time: 0.12s
+  Response Time: 0.06s
   Entries: 20
   Feed Title: AI News & Artificial Intelligence | TechCrunch
-  Last Updated: 2025-07-06 18:28:16
+  Last Updated: 2025-07-19 21:29:57
+
+✅ WORKING the_register
+  URL: https://www.theregister.com/headlines.rss
+  HTTP Status: 200
+  Response Time: 0.1s
+  Entries: 50
+  Feed Title: The Register
+  Last Updated: 2025-07-20 11:01:11
+
+✅ WORKING venturebeat_ai
+  URL: https://feeds.feedburner.com/venturebeat/SZYF
+  HTTP Status: 200
+  Response Time: 0.11s
+  Entries: 26
+  Feed Title: VentureBeat
+  Last Updated: 2025-07-20 04:11:36
+
+✅ WORKING wired_tech
+  URL: https://www.wired.com/feed/rss
+  HTTP Status: 200
+  Response Time: 0.1s
+  Entries: 50
+  Feed Title: WIRED
+  Last Updated: 2025-07-20 13:39:55
 
 ✅ WORKING ycombinator
-  URL: https://news.ycombinator.com/rss
+  URL: https://feeds.feedburner.com/ycombinator
   HTTP Status: 200
-  Response Time: 0.27s
-  Entries: 30
-  Feed Title: Hacker News
+  Response Time: 0.24s
+  Entries: 15
+  Feed Title: Y Combinator Blog
+  Last Updated: 2025-07-20 11:39:43
 
-❌ FAILED anthropic
-  URL: https://www.anthropic.com/news/rss.xml
+❌ FAILED arxiv_ai_coding
+  URL: http://export.arxiv.org/api/query
+  HTTP Status: 200
+  Response Time: 0.14s
+  Entries: 0
+  Feed Title: ArXiv Query: search_query=&amp;id_list=&amp;start=0&amp;max_results=10
+  Last Updated: 2025-07-20 04:00:00
+  Error: No entries found in feed
+
+❌ FAILED product_hunt_ai_tools
+  URL: https://www.producthunt.com/feed/tagged/ai-tools
   HTTP Status: 404
-  Response Time: 0.37s
+  Response Time: 0.25s
   Error: HTTP 404: Not Found
 
-❌ FAILED google_ai
-  URL: https://ai.googleblog.com/feeds/posts/default
-  HTTP Status: 404
-  Response Time: 0.22s
-  Error: HTTP 404: Not Found
+⚪ DISABLED anthropic
+  URL: https://www.anthropic.com/news
+  Error: Feed disabled in config
 
-❌ FAILED product_hunt
+⚪ DISABLED google_ai
+  URL: https://blog.research.google/feeds/posts/default
+  Error: Feed disabled in config
+
+⚪ DISABLED nitter_ai_coding
+  URL: https://nitter.net/search/rss?q=AI+coding+assistant+OR+autonomous+agent+OR+code+generation
+  Error: Feed disabled in config
+
+⚪ DISABLED product_hunt
   URL: https://www.producthunt.com/feed/tagged/developer-tools
-  HTTP Status: 404
-  Response Time: 0.57s
-  Error: HTTP 404: Not Found
+  Error: Feed disabled in config
 
-❌ FAILED the_verge_ai
-  URL: https://www.theverge.com/ai/rss/index.xml
-  HTTP Status: 404
-  Response Time: 0.13s
-  Error: HTTP 404: Not Found
+⚪ DISABLED reddit_machinelearning
+  URL: https://www.reddit.com/r/MachineLearning/.rss
+  Error: Feed disabled in config
 
-❌ FAILED vercel_blog
-  URL: https://vercel.com/blog/rss.xml
-  HTTP Status: 404
-  Response Time: 0.2s
-  Error: HTTP 404: Not Found
+⚪ DISABLED the_verge_ai
+  URL: https://www.theverge.com/ai/rss
+  Error: Feed disabled in config
+
+⚪ DISABLED vercel_blog
+  URL: https://vercel.com/blog/feed.xml
+  Error: Feed disabled in config

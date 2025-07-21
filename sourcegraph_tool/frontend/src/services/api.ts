@@ -1,6 +1,36 @@
 import type { Insight, InsightFilters, TrendData } from '../types';
 
-const API_BASE_URL = 'http://localhost:8000';
+// Determine API base URL based on current location
+const getApiBaseUrl = () => {
+  if (typeof window === 'undefined') return 'http://localhost:8000';
+  
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+  
+  // If accessing via external IP, use external API
+  if (hostname === '71.184.134.115') {
+    return 'http://71.184.134.115:8000';
+  }
+  
+  // If accessing via local network IP (192.168.x.x), use same IP for API
+  if (hostname.startsWith('192.168.')) {
+    return `http://${hostname}:8000`;
+  }
+  
+  // If accessing via any non-localhost IP, try to use same IP for API
+  if (hostname !== 'localhost' && hostname !== '127.0.0.1' && !hostname.includes('local')) {
+    return `http://${hostname}:8000`;
+  }
+  
+  // Default to localhost for development
+  return 'http://localhost:8000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// Debug logging
+console.log('Frontend hostname:', typeof window !== 'undefined' ? window.location.hostname : 'server');
+console.log('API_BASE_URL:', API_BASE_URL);
 
 export class ApiService {
   private static async request<T>(

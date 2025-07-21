@@ -104,7 +104,11 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
         const timeLabel = filters.fromHours === 24 ? 'Last 24 hours' :
             filters.fromHours === 168 ? 'Last 7 days' :
                 filters.fromHours === 720 ? 'Last 30 days' :
-                    `Last ${filters.fromHours} hours`;
+                    filters.fromHours === 2160 ? 'Last 3 months' :
+                        filters.fromHours === 4320 ? 'Last 6 months' :
+                            filters.fromHours === 6480 ? 'Last 9 months' :
+                                filters.fromHours === 8760 ? 'Last 1 year' :
+                                    `Last ${filters.fromHours} hours`;
         filterPills.push({
             type: 'timeRange',
             label: timeLabel,
@@ -219,6 +223,42 @@ export const SearchBar = ({ filters, onFiltersChange, onRefresh, isRefreshing }:
                             }`}
                     >
                         Last 30 days
+                    </button>
+                    <button
+                        onClick={() => handleQuickTimeFilter(2160)}
+                        className={`px-4 py-2 text-sm rounded-full border touch-manipulation ${filters.fromHours === 2160
+                                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 active:bg-gray-300'
+                            }`}
+                    >
+                        Last 3 months
+                    </button>
+                    <button
+                        onClick={() => handleQuickTimeFilter(4320)}
+                        className={`px-4 py-2 text-sm rounded-full border touch-manipulation ${filters.fromHours === 4320
+                                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 active:bg-gray-300'
+                            }`}
+                    >
+                        Last 6 months
+                    </button>
+                    <button
+                        onClick={() => handleQuickTimeFilter(6480)}
+                        className={`px-4 py-2 text-sm rounded-full border touch-manipulation ${filters.fromHours === 6480
+                                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 active:bg-gray-300'
+                            }`}
+                    >
+                        Last 9 months
+                    </button>
+                    <button
+                        onClick={() => handleQuickTimeFilter(8760)}
+                        className={`px-4 py-2 text-sm rounded-full border touch-manipulation ${filters.fromHours === 8760
+                                ? 'bg-blue-100 text-blue-800 border-blue-200'
+                                : 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 active:bg-gray-300'
+                            }`}
+                    >
+                        Last 1 year
                     </button>
                 </div>
             </div>

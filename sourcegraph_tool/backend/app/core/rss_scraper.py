@@ -79,11 +79,25 @@ class RSSFeedScraper:
                         if entry_date and entry_date > cutoff_time:
                             # Filter for AI/agent/productivity related content
                             if self._is_relevant_content(entry):
+                                # Handle link extraction with fallback to canonical/alternate links
+                                link = entry.get('link', '')
+                                if not link and 'links' in entry and entry.get('links'):
+                                    # Prefer canonical or alternate links for AMP pages
+                                    for link_obj in entry.links:
+                                        if hasattr(link_obj, 'get'):
+                                            rel = link_obj.get('rel')
+                                            if rel in ('alternate', 'canonical'):
+                                                link = link_obj.get('href', '')
+                                                break
+                                        elif hasattr(link_obj, 'href'):
+                                            link = link_obj.href
+                                            break
+                                
                                 relevant_entries.append({
                                     'title': entry.get('title', ''),
                                     'summary': entry.get('summary', ''),
                                     'content': entry.get('content', [{}])[0].get('value', '') if entry.get('content') else '',
-                                    'link': entry.get('link', ''),
+                                    'link': link,
                                     'published': entry_date,
                                     'author': entry.get('author', ''),
                                     'tags': [tag.get('term', '') for tag in entry.get('tags', [])]

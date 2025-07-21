@@ -35,10 +35,16 @@ export const ModernInsightCard = ({ insight, searchQuery }: ModernInsightCardPro
   };
 
   // Clean and prepare text for display
-  const cleanText = (text: string) => {
-    // Remove HTML tags and markdown links
-    return text
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
+  const cleanText = (text: string, preserveHighlights: boolean = false) => {
+    // Remove HTML tags except for mark tags when preserving highlights
+    let result = text;
+    if (preserveHighlights) {
+      result = result.replace(/<(?!mark\b|\/mark\b)[^>]*>/g, ''); // Remove HTML tags except <mark>
+    } else {
+      result = result.replace(/<[^>]*>/g, ''); // Remove all HTML tags
+    }
+    
+    return result
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Convert markdown links to just text
       .replace(/Article URL:.*$/gm, '') // Remove "Article URL:" lines
       .replace(/Source:.*$/gm, '') // Remove "Source:" lines
@@ -54,7 +60,8 @@ export const ModernInsightCard = ({ insight, searchQuery }: ModernInsightCardPro
 
   // Use snippet if available, otherwise fall back to summary, with better fallback
   const rawText = insight.snippet || insight.summary || insight.title || '';
-  const displayText = cleanText(rawText);
+  // Preserve highlights in snippets (which contain search matches), clean everything else
+  const displayText = insight.snippet ? cleanText(rawText, true) : cleanText(rawText);
   
   // If displayText is too short or empty, try to extract more context from summary
   const finalDisplayText = displayText.length < 50 && insight.summary && insight.summary !== rawText 
